@@ -220,7 +220,13 @@ internal sealed class DocxDocumentReader : IWordDocumentReader
         var paragraphs = cell.Elements<Paragraph>()
             .Select(ExtractInlineText)
             .ToArray();
-        return string.Join("\n", paragraphs);
+        var length = paragraphs.Length;
+        while (length > 0 && paragraphs[length - 1].Length == 0)
+        {
+            length--;
+        }
+
+        return string.Join("\n", paragraphs.Take(length));
     }
 
     private static string ExtractInlineText(OpenXmlElement element)
@@ -307,6 +313,6 @@ internal sealed class DocxDocumentReader : IWordDocumentReader
             return null;
         }
 
-        return merge.Val?.Value.ToString().ToLowerInvariant() ?? "continue";
+        return merge.Val?.Value == MergedCellValues.Restart ? "restart" : "continue";
     }
 }
