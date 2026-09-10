@@ -4,10 +4,6 @@
 
 `converter-docs-v-exeal` is a Windows desktop utility project for converting one Word document (`.doc` / `.docx`) into a working `.xlsx` while preventing silent data loss.
 
-## Current lifecycle state
-
-Phase 07 bootstrap is complete after `docs/project/07_BOOTSTRAP.md` is present and its recorded readiness gates are satisfied. The next owning phase is Phase 08 — Task Breakdown. Do not implement product `REQ-*` behavior unless the active lifecycle phase explicitly permits Build work.
-
 ## Source of truth
 
 Canonical project documents live under `docs/project/`. Read the owning document for the question instead of treating chat history as authority.
@@ -19,7 +15,11 @@ Canonical project documents live under `docs/project/`. Read the owning document
 - visual design: `docs/project/05_VISUAL_UI_DESIGN.md`
 - technical plan: `docs/project/06_TECHNICAL_PLAN.md`
 - bootstrap state: `docs/project/07_BOOTSTRAP.md`
+- task decomposition: `docs/project/08_TASK_BREAKDOWN.md`
+- latest plan-check gate: `docs/project/09_PLAN_CHECK.md`
 - selected visual reference: `docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg`
+
+Do not infer lifecycle state from an old chat or stale status sentence. Before product implementation, read the latest `09_PLAN_CHECK.md`. Build may start only when it says `PLAN_CHECK_STATUS: READY_FOR_BUILD`; otherwise follow its `RETURN_TO_PHASE` route. During Build, execute work from `08_TASK_BREAKDOWN.md` unless a newer canonical task artifact explicitly replaces it.
 
 ## Critical invariants
 
@@ -74,6 +74,13 @@ Fast check after setup:
 dotnet build WordToExcel.sln -c Release --no-restore; if ($LASTEXITCODE) { exit $LASTEXITCODE }; dotnet test tests/WordToExcel.Tests/WordToExcel.Tests.csproj -c Release --no-build; if ($LASTEXITCODE) { exit $LASTEXITCODE }; dotnet format WordToExcel.sln --verify-no-changes --no-restore
 ```
 
+Dependency advisory check used by CI:
+
+```powershell
+dotnet restore WordToExcel.sln --locked-mode -p:AuditPipeline=true
+dotnet package list --project WordToExcel.sln --vulnerable --include-transitive --no-restore
+```
+
 ## Agent runtime profile
 
 Primary portable instruction mechanism: this root `AGENTS.md`.
@@ -86,5 +93,7 @@ No nested/path-specific agent instruction files are required at bootstrap. Do no
 - governance problem → Phase 03
 - UX problem → Phase 04
 - visual problem → Phase 05
-- architecture/dependency/bootstrap-plan problem → Phase 06
-- repository/bootstrap reproducibility problem → Phase 07
+- architecture/dependency decision → Phase 06
+- repository/bootstrap reproducibility or agent-readiness problem → Phase 07
+- task decomposition/order/coverage problem → Phase 08
+- plan-check methodology/result problem → Phase 09
