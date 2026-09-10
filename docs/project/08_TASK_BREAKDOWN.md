@@ -3,28 +3,29 @@
 PHASE: 08_TASK_BREAKDOWN  
 STATUS: COMPLETE  
 REPOSITORY: `nodeuscoverme31/converter-docs-v-exeal`  
-BASE_HEAD: `a1eafd337508f4c84ffd11614cff928d45135efe`  
-BASE_WORKTREE_STATUS: `REMOTE_ONLY` — Phase 08 использует GitHub tree snapshot; отдельный локальный worktree не открыт.  
-PROJECT_MODE: GREENFIELD
+BASE_HEAD: `35ce064a0c25f33a1803a6a08b8e0be1b164b498`  
+BASE_WORKTREE_STATUS: `REMOTE_ONLY` — Phase 08 uses the live GitHub tree snapshot; no separate local worktree is open.  
+PROJECT_MODE: GREENFIELD  
+REMEDIATION_TRIGGER: `09_PLAN_CHECK.md` findings `F09-003`, `F09-004`
 
 ## Inputs Checked
 
-Проверены live-версии на `BASE_HEAD`: `docs/project/01_PROJECT_INTENT.md`, `02_MVP_SPEC.md`, `03_PROJECT_RULES.md`, `04_PRODUCT_UX_DESIGN.md`, `05_VISUAL_UI_DESIGN.md`, `06_TECHNICAL_PLAN.md`, `07_BOOTSTRAP.md`, `docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg`, `README.md`, `AGENTS.md`, actual `src/`, `tests/`, workflow и lockfiles.
+Rechecked live versions at `BASE_HEAD`: `docs/project/01_PROJECT_INTENT.md`, `02_MVP_SPEC.md`, `03_PROJECT_RULES.md`, `04_PRODUCT_UX_DESIGN.md`, `05_VISUAL_UI_DESIGN.md`, `06_TECHNICAL_PLAN.md`, remediated `07_BOOTSTRAP.md`, `docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg`, `README.md`, `AGENTS.md`, actual `src/`, `tests/`, workflow and lockfiles. `09_PLAN_CHECK.md` was read only as the return trigger for `F09-003/F09-004`.
 
 Selected Phase-05 source remains `05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.png`; repository projection is `docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg`.
 
-Live repo не противоречит Phase 07. Product behavior ещё не реализован.
+The remediated live repo is consistent with Phase 07. `AGENT_CONTEXT_READY: PASS`. Product behavior is still not implemented.
 
 ## Live Repository Preflight
 
 ```text
 REPOSITORY: nodeuscoverme31/converter-docs-v-exeal
-BASE_HEAD: a1eafd337508f4c84ffd11614cff928d45135efe
+BASE_HEAD: 35ce064a0c25f33a1803a6a08b8e0be1b164b498
 BRANCH: main
 WORKTREE_STATUS: REMOTE_ONLY
 PROJECT_MODE: GREENFIELD
-CANONICAL_DOCS: PASS — docs/project/01..07 present
-AGENT_INSTRUCTIONS: PASS — /AGENTS.md present
+CANONICAL_DOCS: PASS — docs/project/01..09 present
+AGENT_INSTRUCTIONS: PASS — /AGENTS.md present and points to 08 task source + 09 pre-Build gate
 AGENT_CONTEXT_READY: PASS
 VERIFIED_SETUP: dotnet restore WordToExcel.sln --locked-mode
 VERIFIED_START: dotnet run --project src/WordToExcel.App/WordToExcel.App.csproj -c Release --no-build -- --bootstrap-smoke
@@ -36,29 +37,30 @@ Actual scaffold: `App.xaml` already loads built-in WPF Fluent resources; `MainWi
 
 ## Verified Execution Baseline
 
-Evidence: GitHub Actions `bootstrap-check`, run `34510744864`, on `BASE_HEAD`, conclusion `success`.
+Evidence: GitHub Actions `bootstrap-check`, run `34516489971`, on `BASE_HEAD`, conclusion `success`.
 
-SETUP: PASS — `dotnet restore WordToExcel.sln --locked-mode`  
+SETUP: PASS — locked restore with the current Phase-07 NuGet audit guard.  
 START: PASS — `dotnet run --project src/WordToExcel.App/WordToExcel.App.csproj -c Release --no-build -- --bootstrap-smoke`  
 FAST_CHECK: PASS — Phase-07 build + test + format chain above.  
 TEST: PASS — `dotnet test tests/WordToExcel.Tests/WordToExcel.Tests.csproj -c Release --no-build`  
+DEPENDENCY AUDIT: PASS at the current Phase-07 point-in-time baseline.  
 PORTABLE_PUBLISH_BASELINE: PASS — `dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false`
 
-All tasks must preserve these commands and the accepted no-Office/no-network/no-service runtime boundary.
+All tasks must preserve these commands, the accepted no-Office/no-network/no-service runtime boundary, and the Phase-06 security boundaries.
 
 ## MVP First
 
 MVP_FIRST_COMPLETION_POINT: **T009**
 
-После T009 главный clean user flow работает end-to-end для `.docx` и для `.doc` только после обязательного PASS `LEGACY-DOC-001`: выбрать/перетащить → явно запустить → validated `.xlsx` → увидеть `Готово`, имя и путь. Warning/error/recovery completeness закрывается T010–T012.
+After T009 the clean user flow works end-to-end for `.docx` and for `.doc` only after mandatory PASS `LEGACY-DOC-001`: choose/drop → explicit start → validated `.xlsx` → `Готово` with actual name/path. Warning/error/recovery completeness is closed by T010–T012.
 
 ## Story / Scenario Completion Criteria
 
 ### SCENARIO-01 — Successful Word → Excel
-GOAL: один readable `.doc/.docx` → один working `.xlsx`.  
+GOAL: one readable `.doc/.docx` → one working `.xlsx`.  
 TASKS: T001–T009.  
-INDEPENDENT_COMPLETION_CRITERIA: отдельный sheet на каждую таблицу; text в `Контекст`; опасные значения exact; publish только после independent validation; source unchanged; WPF clean flow доступен.  
-INDEPENDENT_VERIFY: repo test/fast-check + portable publish + interactive clean `.docx` и corpus-approved `.doc`.
+INDEPENDENT_COMPLETION_CRITERIA: separate sheet per table; text in `Контекст`; dangerous values exact; publish only after independent validation; source unchanged; filesystem paths canonicalized before source read/output write; clean WPF flow available.  
+INDEPENDENT_VERIFY: repo test/fast-check + portable publish + interactive clean `.docx` and corpus-approved `.doc`.
 
 ### SCENARIO-02 — Complex table
 GOAL: merged/irregular table → rectangular grid without silent loss; ambiguity is visible.  
@@ -75,7 +77,7 @@ INDEPENDENT_VERIFY: embedded-image fixture + warning E2E + interactive details.
 ### SCENARIO-04 — Input/save failure
 GOAL: unsupported/protected/corrupt input or save failure never becomes false success.  
 TASKS: T007,T008,T011,T012.  
-INDEPENDENT_COMPLETION_CRITERIA: typed error, no successful publish, source unchanged, understandable recovery; alternate destination works for save failure.  
+INDEPENDENT_COMPLETION_CRITERIA: typed error, no successful publish, source unchanged, understandable recovery; alternate destination is canonicalized before write and works when valid.  
 INDEPENDENT_VERIFY: failure fixtures, E2E save/input tests, interactive recovery, fast-check.
 
 ## Dependency Graph
@@ -110,13 +112,13 @@ T008 waits for both clean-core and legacy-gate branches.
 - [ ] T003 [P] Normalize Word table topology into a loss-aware rectangular logical grid — `src/WordToExcel.App/Conversion/TableNormalizer.cs`
 - [ ] T004 [P] Apply lossless Excel value policy for text, safe numbers/dates and formula-like input — `src/WordToExcel.App/Conversion/ValuePolicy.cs`
 - [ ] T005 [P] Execute `LEGACY-DOC-001` fidelity spike against the required `.doc` corpus — `tests/WordToExcel.Tests/Integration/LegacyDocSpikeTests.cs`
-- [ ] T006 Produce and independently validate XLSX from normalized document data — `src/WordToExcel.App/Excel/ExcelWorkbookWriter.cs`, `src/WordToExcel.App/Validation/OpenXmlOutputValidator.cs`
-- [ ] T007 Publish a validated clean `.docx` end-to-end through detector/orchestrator/publisher — `src/WordToExcel.App/Conversion/ConversionOrchestrator.cs`
+- [ ] T006 [P] Produce and independently validate XLSX from normalized document data — `src/WordToExcel.App/Excel/ExcelWorkbookWriter.cs`, `src/WordToExcel.App/Validation/OpenXmlOutputValidator.cs`
+- [ ] T007 Publish a validated clean `.docx` end-to-end through detector/orchestrator/publisher with canonical source/output paths — `src/WordToExcel.App/Conversion/ConversionOrchestrator.cs`
 - [ ] T008 Integrate approved `.doc → temporary .docx` adapter into the common pipeline — `src/WordToExcel.App/Word/LegacyDocConverter.cs`
 - [ ] T009 Deliver clean interactive WPF flow through `Готово` — `src/WordToExcel.App/MainWindow.xaml`
 - [ ] T010 Deliver warning flows for ambiguity, unsupported objects and no-table documents — `src/WordToExcel.App/MainWindow.xaml`, `tests/WordToExcel.Tests/E2E/WarningConversionTests.cs`
 - [ ] T011 Deliver typed input failures for unsupported, protected and corrupt documents — `src/WordToExcel.App/Conversion/InputDetector.cs`, `tests/WordToExcel.Tests/E2E/InputFailureTests.cs`
-- [ ] T012 Deliver output-save recovery with alternate destination and no silent overwrite — `src/WordToExcel.App/Conversion/OutputPublisher.cs`, `tests/WordToExcel.Tests/E2E/SaveRecoveryTests.cs`
+- [ ] T012 Deliver output-save recovery with canonical alternate destination and no silent overwrite — `src/WordToExcel.App/Conversion/OutputPublisher.cs`, `tests/WordToExcel.Tests/E2E/SaveRecoveryTests.cs`
 
 ## Detailed Task Cards
 
@@ -355,7 +357,7 @@ EVIDENCE: tests + validator assertions + temp workbook inspection.
 PARALLEL: YES — after T003/T004, separate from T002/T005.
 
 ### T007 — Clean DOCX orchestration and safe publication
-GOAL: First complete core `.docx` pipeline: detect → read → normalize/value-plan → temp XLSX → validate → safe publish → `ConversionResult`.
+GOAL: First complete core `.docx` pipeline: canonicalize path → detect → read → normalize/value-plan → temp XLSX → validate → safe publish → `ConversionResult`.
 
 IMPLEMENTS:
 - SCENARIO: SCENARIO-01
@@ -365,32 +367,32 @@ IMPLEMENTS:
 - AC: AC-001-2, AC-002-1, AC-003-1, AC-005-1/2/3, AC-006-1/2, AC-007-1, AC-009-1, AC-Q001-1, AC-Q002-1, AC-Q004-1
 - UX: clean success result + output beside source
 - VISUAL: NONE
-- TECH_DECISION: TR-005/006/007; Orchestrator/Input Detector/Output Publisher
+- TECH_DECISION: TR-005/006/007; Orchestrator/Input Detector/Output Publisher; Phase-06 Security Boundary #6 — canonicalize file paths before read/write
 
-IN_SCOPE: clean `.docx` detection; one session; unique temp dir/cleanup; source read-only; validation gate; output beside source; `Name (1).xlsx` collision policy; success with actual path.  
-NOT_IN_SCOPE: `.doc` production path, warning UI, invalid-input UI, alternate destination UI.
+IN_SCOPE: clean `.docx` detection; canonical absolute source path before source file I/O; canonical default output/directory path before publish file I/O; one session; unique temp dir/cleanup; source read-only; validation gate; output beside source; `Name (1).xlsx` collision policy; success with actual path.  
+NOT_IN_SCOPE: `.doc` production path, warning UI, invalid-input UI, alternate destination UI, new filesystem sandbox/policy beyond accepted path canonicalization.
 
 FILES:
 - CREATE: `src/WordToExcel.App/Conversion/InputDetector.cs`, `Conversion/OutputPublisher.cs`, `Conversion/ConversionOrchestrator.cs`, `tests/WordToExcel.Tests/E2E/DocxConversionTests.cs`, `tests/WordToExcel.Tests/Unit/OutputPublisherTests.cs`
 - MODIFY: NONE
 - TEST: listed E2E/unit files
-- OTHER: Phase-07 publish baseline
+- OTHER: Phase-06 Security Boundaries + Phase-07 publish baseline
 
 CONSUMES: T002,T003,T004,T006 + T001 result.  
-PRODUCES: clean `.docx` orchestrator and publisher for later tasks.  
+PRODUCES: clean `.docx` orchestrator and publisher for later tasks, with canonical source/default-output path handling at the filesystem boundary.  
 DEPENDS_ON: T001,T002,T003,T004,T006  
 BLOCKS: T008,T009,T010,T011,T012
 
-IMPLEMENTATION NOTES: publish only after validator PASS; never overwrite source; no active content execution/network/queue/service.  
+IMPLEMENTATION NOTES: canonicalize accepted source/default destination paths before reading/writing and use canonical paths for filesystem identity/safety decisions; publish only after validator PASS; never overwrite source; no active content execution/network/queue/service. Do not invent a broader path-access policy that Phase 06 did not approve.  
 VALIDATION:
 - TEST_REQUIRED: YES
 - TEST_LEVEL: E2E + unit
-- TARGETED_VERIFY: verified test command; require `DocxConversionTests` + `OutputPublisherTests`
+- TARGETED_VERIFY: verified test command; require `DocxConversionTests` + `OutputPublisherTests`, including equivalent path forms containing relative/`.`/`..` segments that resolve to the same canonical source/destination
 - REPO_FAST_CHECK: Phase-07 fast-check
-- OBSERVABLE_RESULT: clean DOCX → one validated collision-safe XLSX, source unchanged
-- PASS_CONDITION: expected sheets/context/values pass; validator failure cannot publish success
-DONE_WHEN: clean `.docx` core path, cleanup and naming are verified.  
-EVIDENCE: E2E output + source equality + validator + collision test.  
+- OBSERVABLE_RESULT: clean DOCX through a non-canonical-but-valid path form resolves to one canonical source path and produces one validated collision-safe XLSX at the canonical destination; source unchanged
+- PASS_CONDITION: source/default destination are canonical before file I/O; equivalent path forms do not bypass collision/source-safety decisions; expected sheets/context/values pass; validator failure cannot publish success
+DONE_WHEN: clean `.docx` core path, path canonicalization, cleanup and naming are verified.  
+EVIDENCE: E2E output + canonical-path assertions + source equality + validator + collision test.  
 PARALLEL: NO — core convergence.
 
 ### T008 — Production legacy DOC adapter after spike PASS
@@ -404,9 +406,9 @@ IMPLEMENTS:
 - AC: AC-001-1, AC-005-1/2/3, AC-009-1, AC-Q001-1, AC-Q003-1, AC-Q004-1, AC-Q005-1
 - UX: `.doc` same flow as `.docx`
 - VISUAL: NONE
-- TECH_DECISION: DECISION-004; CONTRACT-02; TR-003
+- TECH_DECISION: DECISION-004; CONTRACT-02; TR-003; reuse T007 canonical source-path boundary
 
-IN_SCOPE: production DocSharp adapter; temp DOCX lifecycle; `InputKind.Doc`; common reader/normalizer/writer/validator/publisher; typed legacy conversion failure.  
+IN_SCOPE: production DocSharp adapter; temp DOCX lifecycle; `InputKind.Doc`; common canonical source-path handling, reader/normalizer/writer/validator/publisher; typed legacy conversion failure.  
 NOT_IN_SCOPE: alternate parser, LibreOffice fallback, new runtime dependency, separate Excel behavior.
 
 FILES:
@@ -415,21 +417,21 @@ FILES:
 - TEST: `tests/WordToExcel.Tests/E2E/LegacyDocConversionTests.cs`
 - OTHER: T005 corpus, existing DocSharp package
 
-CONSUMES: T005 PASS, T001 contract, T002 reader, T007 pipeline.  
+CONSUMES: T005 PASS, T001 contract, T002 reader, T007 pipeline/path boundary.  
 PRODUCES: full `.doc` route for T009–T012.  
 DEPENDS_ON: T005=PASS,T007  
 BLOCKS: T009 and full input-format completion.
 
-IMPLEMENTATION NOTES: T005 FAIL means do not execute; temp `.docx` is internal; source read-only; no second normalizer/writer path.  
+IMPLEMENTATION NOTES: T005 FAIL means do not execute; temp `.docx` is internal; source read-only; source path uses the already verified T007 canonicalization boundary; no second normalizer/writer path.  
 VALIDATION:
 - TEST_REQUIRED: YES
 - TEST_LEVEL: E2E
 - TARGETED_VERIFY: verified test command; require `LegacyDocConversionTests`
 - REPO_FAST_CHECK: Phase-07 fast-check
 - OBSERVABLE_RESULT: approved `.doc` produces same semantic workbook invariants as equivalent `.docx`
-- PASS_CONDITION: no Office/external process; final XLSX passes same validator
+- PASS_CONDITION: no Office/external process; final XLSX passes same validator; legacy source path cannot bypass the common canonical path handling
 DONE_WHEN: legacy route is common-pipeline behavior.  
-EVIDENCE: E2E + validator + source unchanged.  
+EVIDENCE: E2E + validator + source unchanged + common-path-boundary assertion.  
 PARALLEL: NO — shared orchestrator + hard gate.
 
 ### T009 — Clean interactive WPF flow
@@ -521,7 +523,7 @@ IMPLEMENTS:
 - AC: AC-009-3, AC-010-1/2, AC-Q004-1
 - UX: FLOW-04; ERROR-FORMAT/PROTECTED/CORRUPT
 - VISUAL: error state of `VT-05-001-WINDOWS-NATIVE`
-- TECH_DECISION: ERROR-INPUT-UNSUPPORTED/PROTECTED/CORRUPT/LEGACY-CONVERT
+- TECH_DECISION: ERROR-INPUT-UNSUPPORTED/PROTECTED/CORRUPT/LEGACY-CONVERT; preserve T007 canonical source-path boundary
 
 IN_SCOPE: extension/container mismatch, damaged container, password/encryption detection where supported, legacy conversion failure mapping, ordinary-language error, choose-other recovery, source unchanged.  
 NOT_IN_SCOPE: password recovery/entry, document repair, save error (T012).
@@ -537,7 +539,7 @@ PRODUCES: typed Error behavior.
 DEPENDS_ON: T010 — serialization on shared orchestrator/UI.  
 BLOCKS: T012
 
-IMPLEMENTATION NOTES: extension alone is not success; no partial unreadable output as success; no stack traces; no password feature.  
+IMPLEMENTATION NOTES: extension alone is not success; no partial unreadable output as success; no stack traces; no password feature; do not bypass T007 canonical source-path handling for invalid/error routes.  
 VALIDATION:
 - TEST_REQUIRED: YES
 - TEST_LEVEL: E2E/integration + interactive
@@ -550,7 +552,7 @@ EVIDENCE: tests + absence of final success + source equality + error-state notes
 PARALLEL: NO — shared input/orchestrator/UI.
 
 ### T012 — Save failure and alternate-destination recovery
-GOAL: If validated XLSX cannot publish beside source, show save error, allow an accessible destination, and retry with all safety gates intact.
+GOAL: If validated XLSX cannot publish beside source, show save error, canonicalize the alternate destination before write, allow an accessible destination, and retry with all safety gates intact.
 
 IMPLEMENTS:
 - SCENARIO: SCENARIO-04
@@ -560,32 +562,32 @@ IMPLEMENTS:
 - AC: AC-002-1, AC-009-3, AC-Q004-1, AC-Q005-1
 - UX: STATE-ERROR-SAVE; Output Location/Naming UX
 - VISUAL: error/recovery state
-- TECH_DECISION: ERROR-OUTPUT-WRITE; TR-005/006; Output Publisher
+- TECH_DECISION: ERROR-OUTPUT-WRITE; TR-005/006; Output Publisher; Phase-06 Security Boundary #6 — canonicalize file paths before read/write
 
-IN_SCOPE: inaccessible destination failure; user save error; system destination selection without new package; safe retry; collision-safe naming; no unvalidated success.  
-NOT_IN_SCOPE: installer, remembered destination/history, background retry.
+IN_SCOPE: inaccessible destination failure; user save error; system destination selection without new package; canonical absolute alternate destination before output file I/O; safe retry; collision-safe naming; no unvalidated success.  
+NOT_IN_SCOPE: installer, remembered destination/history, background retry, new filesystem sandbox/policy beyond accepted path canonicalization.
 
 FILES:
 - CREATE: `tests/WordToExcel.Tests/E2E/SaveRecoveryTests.cs`
 - MODIFY: `src/WordToExcel.App/Conversion/OutputPublisher.cs`, `Conversion/ConversionOrchestrator.cs`, `MainWindow.xaml`, `MainWindow.xaml.cs`
 - TEST: `tests/WordToExcel.Tests/E2E/SaveRecoveryTests.cs`, `tests/WordToExcel.Tests/Unit/OutputPublisherTests.cs`
-- OTHER: no new dependency
+- OTHER: Phase-06 Security Boundaries; no new dependency
 
-CONSUMES: T011 error UI + T006/T007 validated temp-output contract.  
-PRODUCES: complete save-recovery flow.  
+CONSUMES: T011 error UI + T006/T007 validated temp-output and canonical-path contract.  
+PRODUCES: complete save-recovery flow using the same canonical output-path safety rule.  
 DEPENDS_ON: T011  
 BLOCKS: NONE
 
-IMPLEMENTATION NOTES: never overwrite existing output; validation failure never becomes success; no destination persistence; retry must preserve validation/source-read-only rules.  
+IMPLEMENTATION NOTES: canonicalize the selected alternate directory/output path before write and collision decisions; never overwrite existing output; validation failure never becomes success; no destination persistence; retry must preserve validation/source-read-only rules.  
 VALIDATION:
 - TEST_REQUIRED: YES
 - TEST_LEVEL: integration/E2E + interactive
-- TARGETED_VERIFY: verified test command requiring `SaveRecoveryTests` + `OutputPublisherTests`
+- TARGETED_VERIFY: verified test command requiring `SaveRecoveryTests` + `OutputPublisherTests`, including an alternate path containing equivalent relative/`.`/`..` segments
 - REPO_FAST_CHECK: Phase-07 fast-check
-- OBSERVABLE_RESULT: inaccessible target → save error; valid alternate target → validated unique XLSX
-- PASS_CONDITION: no overwrite/source mutation/false success
-DONE_WHEN: Phase-04 save-error recovery is observable and testable.  
-EVIDENCE: save/retry tests + unique-name + source check + recovery notes.  
+- OBSERVABLE_RESULT: inaccessible target → save error; valid alternate target is canonicalized → validated unique XLSX at the resolved destination
+- PASS_CONDITION: alternate destination is canonical before file I/O; equivalent path forms cannot bypass collision/source safety; no overwrite/source mutation/false success
+DONE_WHEN: Phase-04 save-error recovery and canonical alternate-destination handling are observable and testable.  
+EVIDENCE: save/retry tests + canonical-path assertions + unique-name + source check + recovery notes.  
 PARALLEL: NO — shared final recovery surface.
 
 ## Coverage Map
@@ -660,9 +662,10 @@ TR-004 → T001,T002
 TR-005 → T006,T007,T012
 TR-006 → T007,T012
 TR-007 → T002,T007,T008
+SECURITY BOUNDARY #6 — canonicalize file paths before read/write → T007,T012; reused by T008/T011 through the common pipeline
 ```
 
-Coverage review: all mandatory scenario/success/requirement/quality/acceptance obligations are mapped; every task has an obligation; UX/visual states are attached to concrete slices; OCR/batch/future formats have no task.
+Coverage review: all mandatory scenario/success/requirement/quality/acceptance obligations are mapped; every task has an obligation; UX/visual states are attached to concrete slices; the previously missing Phase-06 path-canonicalization obligation is now explicitly assigned and validated; OCR/batch/future formats have no task.
 
 ## Explicitly Not Planned
 
@@ -672,6 +675,8 @@ OCR/image-to-table; batch conversion; universal office conversion; exact Word vi
 
 - `LEGACY-DOC-001` is a hard gate. T005 PASS is required before T008; FAIL returns to Phase 06 and no fallback dependency is added silently.
 - Each T005 corpus file needs explicit expected truth/provenance; unknown-content files cannot count toward PASS.
+- Phase-06 Security Boundary #6 is not optional: T007 owns canonicalization before source/default-output I/O and T012 owns canonicalization of an alternate output destination; T008/T011 must reuse the common source-path boundary rather than create a bypass.
+- Path canonicalization is the accepted obligation. Build must not silently expand it into a new filesystem sandbox, allowlist or permission model without an owning technical decision.
 - No-table documents use existing `Warning` rather than a fourth status: Phase 02 forbids false table-success and Phase 04 defines three outcomes. Phase 09 must reject this mapping if it determines it changes approved UX semantics.
 - Local vector geometry may be implementation detail only without external package/asset. Third-party assets require license/notice verification.
 - T009 may adjust bootstrap window dimensions only to satisfy confirmed reflow/text-scaling/action visibility, not invent a new navigation/layout model.
@@ -682,14 +687,14 @@ OCR/image-to-table; batch conversion; universal office conversion; exact Word vi
 
 ## Fresh-Agent Task Readiness
 
-Structural result: PASS for T001–T012. Each card states outcome, obligations, real files, sources/accepted decisions, scope guard, consumes/produces, validation, dependencies and evidence. Behavioral task-readiness with an independent repository-aware coding agent was not executed and is not claimed.
+Structural result: PASS for T001–T012. Each card states outcome, obligations, real files, sources/accepted decisions, scope guard, consumes/produces, validation, dependencies and evidence. T007/T012 now make the accepted filesystem path-canonicalization boundary explicit, so a fresh Build agent does not have to infer this security work from Phase 06. Behavioral task-readiness with an independent repository-aware coding agent was not executed and is not claimed.
 
 ## Internal Self-Check
 
-Repo/base: artifacts 01–07 and actual scaffold/instructions read; `BASE_HEAD` fixed; Phase-07 commands and successful current-base CI verified; `AGENT_CONTEXT_READY: PASS`.  
-Coverage: all SCENARIO/SC/REQ/QREQ/AC plus UX/visual obligations mapped; no orphan/out-of-scope task.  
+Repo/base: artifacts 01–07, remediated bootstrap state and actual scaffold/instructions read; `BASE_HEAD` fixed at `35ce064a0c25f33a1803a6a08b8e0be1b164b498`; Phase-07 commands and successful current-base CI verified; `AGENT_CONTEXT_READY: PASS`.  
+Coverage: all SCENARIO/SC/REQ/QREQ/AC plus UX/visual obligations mapped; accepted Security Boundary #6 is explicitly mapped to T007/T012; no orphan/out-of-scope task.  
 Granularity: one primary outcome/task; T001 only justified foundation; T005 bounded required spike; no catch-all backend/UI/tests/polish task.  
-Dependencies: acyclic; `[P]` surfaces checked; MVP-first T009; shared UI/orchestrator work serialized.  
+Dependencies: acyclic; `[P]` surfaces checked; T006 is consistently marked `[P]` in graph/checklist/card; MVP-first T009; shared UI/orchestrator work serialized.  
 Execution readiness: checklist and cards are 1:1 T001–T012; exact paths supplied; placeholder markers absent; Bootstrap not duplicated; no production implementation executed.
 
 ## Handoff
@@ -697,6 +702,6 @@ Execution readiness: checklist and cards are 1:1 T001–T012; exact paths suppli
 NEXT_PHASE: 09_PLAN_CHECK  
 RETURN_TO_PHASE: NONE
 
-Передать в Phase 09: artifacts `01`–`08`; repo + `BASE_HEAD`; Phase-07 verified commands; checklist/cards; dependency graph/critical path/parallel opportunities; coverage map; `MVP_FIRST_COMPLETION_POINT: T009`; Build-Time Confirmations including `LEGACY-DOC-001`.
+Pass to Phase 09: artifacts `01`–`08`; repo + `BASE_HEAD`; Phase-07 verified commands; checklist/cards; dependency graph/critical path/parallel opportunities; coverage map including Security Boundary #6; `MVP_FIRST_COMPLETION_POINT: T009`; Build-Time Confirmations including `LEGACY-DOC-001` and path canonicalization.
 
 PHASE_08_COMPLETE
