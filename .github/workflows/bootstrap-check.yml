@@ -64,6 +64,7 @@ jobs:
             'docs/project/04_PRODUCT_UX_DESIGN.md',
             'docs/project/05_VISUAL_UI_DESIGN.md',
             'docs/project/06_TECHNICAL_PLAN.md',
+            'docs/project/07_BOOTSTRAP.md',
             'docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg'
           )
           foreach ($path in $required) {
