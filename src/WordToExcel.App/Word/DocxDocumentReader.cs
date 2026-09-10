@@ -1,9 +1,12 @@
 using System.Globalization;
+using System.IO;
 using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using WordToExcel.App.Model;
+using ModelTableRow = WordToExcel.App.Model.TableRow;
+using WordTableRow = DocumentFormat.OpenXml.Wordprocessing.TableRow;
 
 namespace WordToExcel.App.Word;
 
@@ -126,7 +129,7 @@ internal sealed class DocxDocumentReader : IWordDocumentReader
     {
         var sequence = ++tableSequence;
         var tableId = $"Table-{sequence:000}";
-        var rows = new List<TableRow>();
+        var rows = new List<ModelTableRow>();
         var tableFindings = new List<ConversionFinding>();
         var sourceGridHints = table.GetFirstChild<TableGrid>()?
             .Elements<GridColumn>()
@@ -134,7 +137,7 @@ internal sealed class DocxDocumentReader : IWordDocumentReader
             .ToArray() ?? Array.Empty<int>();
 
         var rowIndex = 0;
-        foreach (var row in table.Elements<TableRow>())
+        foreach (var row in table.Elements<WordTableRow>())
         {
             var cells = new List<SourceCell>();
             var sourceCellIndex = 0;
@@ -196,7 +199,7 @@ internal sealed class DocxDocumentReader : IWordDocumentReader
                 sourceCellIndex++;
             }
 
-            rows.Add(new TableRow(rowIndex, cells));
+            rows.Add(new ModelTableRow(rowIndex, cells));
             rowIndex++;
         }
 
