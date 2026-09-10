@@ -22,9 +22,9 @@ jobs:
         shell: pwsh
         run: dotnet --info
 
-      - name: Restore
+      - name: Restore locked dependencies
         shell: pwsh
-        run: dotnet restore WordToExcel.sln --use-lock-file
+        run: dotnet restore WordToExcel.sln --locked-mode
 
       - name: Build
         shell: pwsh
@@ -53,12 +53,19 @@ jobs:
           if (-not $exe) { throw "Published executable not found" }
           Write-Host "Published executable: $($exe.FullName)"
 
-      - name: Show generated lock files
-        if: always()
+      - name: Verify canonical bootstrap docs
         shell: pwsh
         run: |
-          Get-ChildItem -Path . -Filter packages.lock.json -Recurse | Sort-Object FullName | ForEach-Object {
-            Write-Host "===== LOCKFILE $($_.FullName) ====="
-            Get-Content $_.FullName
-            Write-Host "===== END LOCKFILE ====="
+          $required = @(
+            'AGENTS.md',
+            'docs/project/01_PROJECT_INTENT.md',
+            'docs/project/02_MVP_SPEC.md',
+            'docs/project/03_PROJECT_RULES.md',
+            'docs/project/04_PRODUCT_UX_DESIGN.md',
+            'docs/project/05_VISUAL_UI_DESIGN.md',
+            'docs/project/06_TECHNICAL_PLAN.md',
+            'docs/design/05_VISUAL_TARGET_OPTION1_WINDOWS_NATIVE.jpg'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path)) { throw "Missing canonical bootstrap artifact: $path" }
           }
