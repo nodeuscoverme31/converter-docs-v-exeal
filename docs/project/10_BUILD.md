@@ -17,7 +17,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 ## Task Progress
 | Task | Status | Validation | Fast Check | Commit |
 |---|---|---|---|---|
-| T001 | PENDING | — | — | — |
+| T001 | COMPLETE | build PASS | PASS — run 34523442594 | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
 | T002 | PENDING | — | — | — |
 | T003 | PENDING | — | — | — |
 | T004 | PENDING | — | — | — |
@@ -31,7 +31,16 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T012 | PENDING | — | — | — |
 
 ## Task Records
-No task is marked complete before task-level evidence and repo fast-check evidence exist.
+### T001
+STATUS: COMPLETE  
+BASE_BEFORE: `17592cc9c2ec48d8f767b622e031226bd2a48433`  
+FILES_CHANGED: `Model/DocumentModel.cs`, `Model/ConversionResult.cs`, five internal contract files under `Word/`, `Conversion/`, `Excel/`, `Validation/`  
+REUSE_DECISION: REUSE accepted .NET type system/contracts; no new dependency or subsystem.  
+VALIDATION: project build succeeded on PR CI.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34523442594` — PASS, including restore/audit/build/test/format/smoke/publish.  
+DEVIATIONS: NONE.  
+DECISIONS: typed read/legacy exceptions and validation result are kept internal with the accepted domain contracts.  
+COMMIT: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`
 
 ## Build Deviations
 - NONE
@@ -45,8 +54,8 @@ No task is marked complete before task-level evidence and repo fast-check eviden
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 12  
-Fast check: baseline PASS; task-state checks pending  
+Pending tasks: 11  
+Fast check: PASS through T001  
 Known non-blocking issues: `LEGACY-DOC-001` must PASS before T008.
 
 ## Handoff
