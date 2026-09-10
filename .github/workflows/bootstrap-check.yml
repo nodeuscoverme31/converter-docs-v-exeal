@@ -1,0 +1,64 @@
+name: bootstrap-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  bootstrap:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+
+      - name: Version
+        shell: pwsh
+        run: dotnet --info
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore WordToExcel.sln --use-lock-file
+
+      - name: Build
+        shell: pwsh
+        run: dotnet build WordToExcel.sln -c Release --no-restore
+
+      - name: Test
+        shell: pwsh
+        run: dotnet test tests/WordToExcel.Tests/WordToExcel.Tests.csproj -c Release --no-build
+
+      - name: Format check
+        shell: pwsh
+        run: dotnet format WordToExcel.sln --verify-no-changes --no-restore
+
+      - name: Bootstrap smoke
+        shell: pwsh
+        run: dotnet run --project src/WordToExcel.App/WordToExcel.App.csproj -c Release --no-build -- --bootstrap-smoke
+
+      - name: Publish portable folder
+        shell: pwsh
+        run: dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false
+
+      - name: Verify publish output
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/WordToExcel.App.exe -ErrorAction Stop
+          if (-not $exe) { throw "Published executable not found" }
+          Write-Host "Published executable: $($exe.FullName)"
+
+      - name: Show generated lock files
+        if: always()
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path . -Filter packages.lock.json -Recurse | Sort-Object FullName | ForEach-Object {
+            Write-Host "===== LOCKFILE $($_.FullName) ====="
+            Get-Content $_.FullName
+            Write-Host "===== END LOCKFILE ====="
+          }

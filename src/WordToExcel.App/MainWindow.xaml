@@ -1,0 +1,23 @@
+<Window x:Class="WordToExcel.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Word → Excel"
+        Width="720"
+        Height="420"
+        MinWidth="560"
+        MinHeight="320"
+        WindowStartupLocation="CenterScreen">
+  <Grid Margin="32">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+      <TextBlock HorizontalAlignment="Center"
+                 FontSize="30"
+                 FontWeight="SemiBold"
+                 Text="Word → Excel" />
+      <TextBlock Margin="0,12,0,0"
+                 HorizontalAlignment="Center"
+                 FontSize="15"
+                 Opacity="0.72"
+                 Text="Bootstrap shell — product behavior is intentionally not implemented in Phase 07." />
+    </StackPanel>
+  </Grid>
+</Window>
