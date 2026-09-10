@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace WordToExcel.Tests;
 
 public sealed class BootstrapSmokeTests
