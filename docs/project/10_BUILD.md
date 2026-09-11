@@ -20,7 +20,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T001 | COMPLETE | build PASS | PASS — run 34523442594 | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
 | T002 | COMPLETE | integration tests PASS | PASS — run 34525190440 | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
 | T003 | COMPLETE | unit tests PASS | PASS — run 34564595328 | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
-| T004 | PENDING | — | — | — |
+| T004 | COMPLETE | unit tests PASS | PASS — run 34564873097 | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
 | T005 | PENDING | — | — | — |
 | T006 | PENDING | — | — | — |
 | T007 | PENDING | — | — | — |
@@ -64,6 +64,17 @@ DEVIATIONS: NONE.
 DECISIONS: covered merge coordinates carry empty generated cells with no `SourceCellId`; unmatched vertical continuation is preserved as an anchor plus `TABLE_VERTICAL_MERGE_AMBIGUOUS` warning rather than guessed/dropped.  
 COMMIT: `95467b68c771b840dc7381fd3f3ab3cb99b60e77`
 
+### T004
+STATUS: COMPLETE  
+BASE_BEFORE: `642155c1993adb6f8a547c7bf328d1df2025ae7c`  
+FILES_CHANGED: `Conversion/ValuePolicy.cs`, `tests/.../Unit/ValuePolicyTests.cs`.  
+REUSE_DECISION: REUSE .NET BCL invariant parsing (`DateTime.TryParseExact`, `long.TryParse`) and the T001 `OutputValuePlan`; no locale/parser dependency added.  
+VALIDATION: TDD RED run `34564735987` failed only because `ValuePolicy` was absent; tests then passed for leading-zero IDs, >15-digit IDs, formula-like prefixes, strict positive integers, strict ISO dates, ambiguous decimals/dates and exact whitespace/line breaks.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34564873097` — PASS, including build/test/format/smoke/publish.  
+DEVIATIONS: NONE.  
+DECISIONS: only positive integer text with at most 15 digits and exact `yyyy-MM-dd` dates are auto-typed in MVP; ambiguous decimal/date forms and `= + - @` prefixes stay exact text.  
+COMMIT: `9959e70c6dde808efaf096dac75f69f8af0baf69`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 
@@ -76,8 +87,8 @@ COMMIT: `95467b68c771b840dc7381fd3f3ab3cb99b60e77`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 9  
-Fast check: PASS through T003 (`34564595328`)  
+Pending tasks: 8  
+Fast check: PASS through T004 (`34564873097`)  
 Known non-blocking issues: `LEGACY-DOC-001` must PASS before T008.
 
 ## Handoff
