@@ -22,7 +22,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T003 | COMPLETE | unit tests PASS | PASS — run 34564595328 | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
 | T004 | COMPLETE | unit tests PASS | PASS — run 34564873097 | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
 | T005 | COMPLETE | 12-category legacy spike PASS | PASS — run 34571752300 | `7261629630737d7f20c21036b68b46b03d88aa7d` |
-| T006 | PENDING | — | — | — |
+| T006 | COMPLETE | integration readback tests PASS | PASS — run 34573733653 | `111356e991e0e9ff243ed281c73816c98fd55a19` |
 | T007 | PENDING | — | — | — |
 | T008 | PENDING | — | — | — |
 | T009 | PENDING | — | — | — |
@@ -86,6 +86,18 @@ DEVIATIONS: Task card listed only spike tests/fixtures; due the connected GitHub
 DECISIONS: the selected DocSharp path is accepted for MVP legacy `.doc` input on the required corpus. Protected documents are detected from the FIB encryption flag before conversion; damaged compound files are rejected. No fallback engine was introduced.  
 COMMIT: `7261629630737d7f20c21036b68b46b03d88aa7d`
 
+### T006
+STATUS: COMPLETE  
+BASE_BEFORE: `2ce77783a5a6f34194ad7f3df7902984c0b15f52`  
+FILES_CHANGED: `Excel/ExcelWorkbookWriter.cs`, `Validation/OpenXmlOutputValidator.cs`, `tests/.../Integration/XlsxWriteReadbackTests.cs`.  
+REUSE_DECISION: REUSE `ClosedXML 0.105.1` only for serialization and `DocumentFormat.OpenXml 3.5.1` for independent reopen/readback; no second spreadsheet abstraction or dependency added.  
+VALIDATION: RED run `34572026380` failed because writer/validator implementations did not yet exist. First implementation run `34572314169` exposed compile-only defects (`System.IO` imports and an invalid `CellValues` pattern); these were fixed without changing task semantics. Final tests verify deterministic `Таблица N`/`Контекст`, exact leading-zero/long/formula-like text, typed safe number/date values, and absence of generated formulas.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34573733653` — PASS, including restore/audit/build/test/format/smoke/publish.  
+DIFF_SCOPE: compare `2ce77783... → 111356e9...` contains exactly the two declared production files plus the declared integration test.  
+DEVIATIONS: NONE.  
+DECISIONS: workbook generation and validation are independent at serialized-package level; publication remains blocked until T007 and therefore T006 writes only the requested output path supplied by its caller.  
+COMMIT: `111356e991e0e9ff243ed281c73816c98fd55a19`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 - T005 used temporary one-shot GitHub Actions workflows solely to author/replace binary test fixtures because the connector cannot write arbitrary binary content. Those workflows were removed before the task PASS; they are not product/runtime dependencies.
@@ -99,9 +111,9 @@ COMMIT: `7261629630737d7f20c21036b68b46b03d88aa7d`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 7  
-Fast check: PASS through T005 (`34571752300`)  
-Known non-blocking issues: NONE from the legacy gate; T006–T012 remain unimplemented.
+Pending tasks: 6  
+Fast check: PASS through T006 (`34573733653`)  
+Known non-blocking issues: NONE from completed tasks; T007–T012 remain.
 
 ## Handoff
 NEXT_PHASE: NONE  
