@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   bootstrap:
     runs-on: windows-latest
@@ -89,3 +92,31 @@ jobs:
           foreach ($path in $required) {
             if (-not (Test-Path $path)) { throw "Missing canonical lifecycle artifact: $path" }
           }
+
+      - name: Publish rolling test release
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'build/phase-10'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $tag = 'test-latest'
+          $repo = $env:GITHUB_REPOSITORY
+          $asset = 'artifacts/WordToExcel.exe'
+
+          gh --version
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -f $tag $env:TEST_SHA
+          git push origin "refs/tags/$tag" --force
+
+          gh release view $tag --repo $repo *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --repo $repo --title 'Test Build' --prerelease
+            gh release upload $tag $asset --repo $repo --clobber
+          }
+          else {
+            gh release create $tag $asset --repo $repo --title 'Test Build' --prerelease --notes 'Автоматическая тестовая сборка WordToExcel. Файл WordToExcel.exe заменяется после каждого успешного CI ветки build/phase-10.'
+          }
+
+          gh release view $tag --repo $repo --json tagName,name,isPrerelease,url,assets
