@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   bootstrap:
     runs-on: windows-latest
@@ -46,16 +49,28 @@ jobs:
         shell: pwsh
         run: dotnet run --project src/WordToExcel.App/WordToExcel.App.csproj -c Release --no-build -- --bootstrap-smoke
 
-      - name: Publish portable folder
+      - name: Publish single-file Windows build
         shell: pwsh
-        run: dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false
+        run: dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -p:IncludeNativeLibrariesForSelfExtract=true
 
-      - name: Verify publish output
+      - name: Stage single EXE
         shell: pwsh
         run: |
-          $exe = Get-ChildItem src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/WordToExcel.App.exe -ErrorAction Stop
-          if (-not $exe) { throw "Published executable not found" }
-          Write-Host "Published executable: $($exe.FullName)"
+          $source = 'src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/WordToExcel.App.exe'
+          if (-not (Test-Path $source)) { throw "Published executable not found: $source" }
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Copy-Item $source 'artifacts/WordToExcel.exe'
+          $exe = Get-Item 'artifacts/WordToExcel.exe'
+          if ($exe.Length -le 0) { throw "Staged executable is empty" }
+          Write-Host "Single-file executable: $($exe.FullName) ($($exe.Length) bytes)"
+
+      - name: Upload single Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: WordToExcel-win-x64-single-exe
+          path: artifacts/WordToExcel.exe
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Verify canonical lifecycle docs and notices
         shell: pwsh
@@ -77,3 +92,32 @@ jobs:
           foreach ($path in $required) {
             if (-not (Test-Path $path)) { throw "Missing canonical lifecycle artifact: $path" }
           }
+
+      - name: Publish rolling test release
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'build/phase-10'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TEST_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $tag = 'test-latest'
+          $repo = $env:GITHUB_REPOSITORY
+          $asset = 'artifacts/WordToExcel.exe'
+
+          gh --version
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin $env:TEST_SHA --depth=1
+          git tag -f $tag $env:TEST_SHA
+          git push origin "refs/tags/$tag" --force
+
+          gh release view $tag --repo $repo *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --repo $repo --title 'Test Build' --prerelease
+            gh release upload $tag $asset --repo $repo --clobber
+          }
+          else {
+            gh release create $tag $asset --repo $repo --title 'Test Build' --prerelease --notes 'Автоматическая тестовая сборка WordToExcel. Файл WordToExcel.exe заменяется после каждого успешного CI ветки build/phase-10.'
+          }
+
+          gh release view $tag --repo $repo --json tagName,name,isPrerelease,url,assets
