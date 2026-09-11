@@ -106,6 +106,11 @@ internal sealed class ConversionOrchestrator
             return Error(ConversionErrorCategory.UnsupportedFormat, "Поддерживаются файлы Word форматов .doc и .docx.");
         }
 
+        if (inputKind == InputKind.Protected)
+        {
+            return Error(ConversionErrorCategory.ProtectedDocument, "Документ Word защищён паролем. Откройте его в Word, снимите защиту и попробуйте снова.");
+        }
+
         var tempDirectory = Path.GetFullPath(
             Path.Combine(Path.GetTempPath(), "WordToExcel", Guid.NewGuid().ToString("N")));
         var tempXlsx = Path.Combine(tempDirectory, "validated-output.xlsx");
