@@ -111,6 +111,7 @@
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Path Grid.Column="0"
                   Width="24"
@@ -136,6 +137,24 @@
                          Foreground="{StaticResource AppMutedTextBrush}"
                          TextWrapping="Wrap" />
             </StackPanel>
+            <Button x:Name="ClearSelectedFileButton"
+                    Grid.Column="2"
+                    Width="30"
+                    Height="30"
+                    Margin="12,0,0,0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="{StaticResource AppMutedTextBrush}"
+                    FontSize="19"
+                    FontWeight="SemiBold"
+                    Cursor="Hand"
+                    ToolTip="Убрать файл из выбора"
+                    Click="ClearSelectedFileButton_Click"
+                    automation:AutomationProperties.Name="Убрать выбранный файл">
+              <TextBlock Text="×" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
           </Grid>
         </Border>
 
