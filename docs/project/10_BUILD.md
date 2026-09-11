@@ -24,7 +24,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T005 | COMPLETE | 12-category legacy spike PASS | PASS — run 34571752300 | `7261629630737d7f20c21036b68b46b03d88aa7d` |
 | T006 | COMPLETE | integration readback tests PASS | PASS — run 34573733653 | `111356e991e0e9ff243ed281c73816c98fd55a19` |
 | T007 | COMPLETE | E2E + publisher tests PASS | PASS — run 34574622457 | `1f82e7af7722612454d5b21ad04cbc21e979233f` |
-| T008 | PENDING | — | — | — |
+| T008 | COMPLETE | legacy E2E PASS | PASS — run 34575233210 | `89eb4bbb6aed9d6aebcabe99561d632b5de0744b` |
 | T009 | PENDING | — | — | — |
 | T010 | PENDING | — | — | — |
 | T011 | PENDING | — | — | — |
@@ -110,6 +110,18 @@ DEVIATIONS: NONE.
 DECISIONS: `InputDetector` already distinguishes valid OLE `.doc` as `InputKind.Doc` for T008 but T007 does not route it; publication happens only after independent validator PASS; output collision resolution is canonical-path based and never overwrites an existing workbook.  
 COMMIT: `1f82e7af7722612454d5b21ad04cbc21e979233f`
 
+### T008
+STATUS: COMPLETE  
+BASE_BEFORE: `939cd82263bda2215406a5396354fbf30c6a29aa`  
+FILES_CHANGED: `Word/LegacyDocConverter.cs`, `Conversion/ConversionOrchestrator.cs`, `tests/.../E2E/LegacyDocConversionTests.cs`.  
+REUSE_DECISION: REUSE the T005-approved `DocSharp.Binary.Doc 0.21.0` API and the complete T007 pipeline; no alternate parser, Office process, LibreOffice fallback, or second writer path.  
+VALIDATION: RED run `34574959917` failed because `LegacyDocConverter` was not yet materialized. Final E2E verifies an approved `simple-table.doc` through a non-canonical source path produces the common validated workbook (`A/B/C/D`, `Таблица 1`, `Контекст`) beside the canonical source while source bytes stay unchanged; protected `.doc` is rejected before a temporary `.docx` is left behind.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34575233210` — PASS, including restore/audit/build/test/format/smoke/publish.  
+DIFF_SCOPE: compare `939cd822... → 89eb4bbb...` contains exactly the declared adapter, shared-orchestrator modification, and legacy E2E test.  
+DEVIATIONS: NONE.  
+DECISIONS: legacy conversion happens only inside the per-session temp directory; both `.doc` and `.docx` converge on the same reader/normalizer/value-policy/writer/validator/publisher path; final naming remains based on the original canonical `.doc` path.  
+COMMIT: `89eb4bbb6aed9d6aebcabe99561d632b5de0744b`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 - T005 used temporary one-shot GitHub Actions workflows solely to author/replace binary test fixtures because the connector cannot write arbitrary binary content. Those workflows were removed before the task PASS; they are not product/runtime dependencies.
@@ -123,9 +135,9 @@ COMMIT: `1f82e7af7722612454d5b21ad04cbc21e979233f`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 5  
-Fast check: PASS through T007 (`34574622457`)  
-Known non-blocking issues: NONE from completed tasks; T008–T012 remain.
+Pending tasks: 4  
+Fast check: PASS through T008 (`34575233210`)  
+Known non-blocking issues: NONE from completed tasks; T009–T012 remain.
 
 ## Handoff
 NEXT_PHASE: NONE  
