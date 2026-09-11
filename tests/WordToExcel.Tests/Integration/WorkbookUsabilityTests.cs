@@ -45,7 +45,13 @@ public sealed class WorkbookUsabilityTests
             var columns = worksheetPart.Worksheet.Elements<Columns>().SingleOrDefault();
             Assert.NotNull(columns);
             Assert.Contains(columns!.Elements<Column>(), column => column.CustomWidth?.Value == true && column.Width?.Value > 15D);
-            Assert.All(columns.Elements<Column>(), column => Assert.True((column.Width?.Value ?? 0D) <= 45D));
+            Assert.All(
+                columns.Elements<Column>(),
+                column =>
+                {
+                    var width = column.Width?.Value ?? 0D;
+                    Assert.True(width <= 45D, $"Serialized column width was {width}.");
+                });
 
             var sheetView = worksheetPart.Worksheet.SheetViews!.Elements<SheetView>().Single();
             Assert.NotNull(sheetView.Pane);
