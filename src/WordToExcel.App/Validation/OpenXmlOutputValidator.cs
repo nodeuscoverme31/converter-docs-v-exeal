@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using WordToExcel.App.Excel;
@@ -233,7 +234,8 @@ internal sealed class OpenXmlOutputValidator : IOutputValidator
             return;
         }
 
-        var actual = cell.DataType?.Value is CellValues.Number or null
+        var dataType = cell.DataType?.Value;
+        var actual = dataType is null || dataType == CellValues.Number
             ? cell.CellValue?.Text ?? string.Empty
             : ReadText(workbookPart, cell);
 
