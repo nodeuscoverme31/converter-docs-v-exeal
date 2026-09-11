@@ -1,0 +1,35 @@
+name: materialize-protected-docx-fixture
+
+on:
+  push:
+    branches: [build/phase-10]
+    paths:
+      - .github/workflows/materialize-protected-docx-fixture.yml
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build/phase-10
+      - name: Download encrypted OOXML DOCX fixture
+        shell: bash
+        run: |
+          mkdir -p tests/WordToExcel.Tests/Fixtures/Invalid
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/apache/poi/671a20eb38ec9ed1a84cce80483d790000514ba9/test-data/poifs/protected_agile.docx \
+            --output tests/WordToExcel.Tests/Fixtures/Invalid/protected.docx
+          test "$(stat -c%s tests/WordToExcel.Tests/Fixtures/Invalid/protected.docx)" -eq 19456
+      - name: Commit fixture
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/WordToExcel.Tests/Fixtures/Invalid/protected.docx
+          git diff --cached --quiet && exit 0
+          git commit -m "test(T011): materialize encrypted DOCX fixture"
+          git push origin HEAD:build/phase-10
