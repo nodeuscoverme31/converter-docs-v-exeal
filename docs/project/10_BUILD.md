@@ -1,7 +1,7 @@
 # 10 — Build
 
 PHASE: 10_BUILD  
-STATUS: IN_PROGRESS
+STATUS: READY_FOR_INTERACTIVE_SMOKE
 
 ## Baseline
 Repository: `nodeuscoverme31/converter-docs-v-exeal`  
@@ -15,130 +15,162 @@ Mode: `SINGLE_AGENT`
 Workers: one implementation executor; no separate coding subagent/worktree runtime available.
 
 ## Task Progress
-| Task | Status | Validation | Fast Check | Commit |
+| Task | Status | Validation | Fast Check | Completion Commit |
 |---|---|---|---|---|
-| T001 | COMPLETE | build PASS | PASS — run 34523442594 | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
-| T002 | COMPLETE | integration tests PASS | PASS — run 34525190440 | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
-| T003 | COMPLETE | unit tests PASS | PASS — run 34564595328 | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
-| T004 | COMPLETE | unit tests PASS | PASS — run 34564873097 | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
-| T005 | COMPLETE | 12-category legacy spike PASS | PASS — run 34571752300 | `7261629630737d7f20c21036b68b46b03d88aa7d` |
-| T006 | COMPLETE | integration readback tests PASS | PASS — run 34573733653 | `111356e991e0e9ff243ed281c73816c98fd55a19` |
-| T007 | COMPLETE | E2E + publisher tests PASS | PASS — run 34574622457 | `1f82e7af7722612454d5b21ad04cbc21e979233f` |
-| T008 | COMPLETE | legacy E2E PASS | PASS — run 34575233210 | `89eb4bbb6aed9d6aebcabe99561d632b5de0744b` |
-| T009 | PENDING | — | — | — |
-| T010 | PENDING | — | — | — |
-| T011 | PENDING | — | — | — |
-| T012 | PENDING | — | — | — |
+| T001 | COMPLETE | build PASS | PASS — run `34523442594` | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
+| T002 | COMPLETE | integration tests PASS | PASS — run `34525190440` | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
+| T003 | COMPLETE | unit tests PASS | PASS — run `34564595328` | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
+| T004 | COMPLETE | unit tests PASS | PASS — run `34564873097` | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
+| T005 | COMPLETE | 12-category legacy spike PASS | PASS — run `34571752300` | `7261629630737d7f20c21036b68b46b03d88aa7d` |
+| T006 | COMPLETE | XLSX write/readback PASS | PASS — run `34573733653` | `111356e991e0e9ff243ed281c73816c98fd55a19` |
+| T007 | COMPLETE | DOCX E2E + publisher PASS | PASS — run `34574622457` | `1f82e7af7722612454d5b21ad04cbc21e979233f` |
+| T008 | COMPLETE | legacy DOC E2E PASS | PASS — run `34575233210` | `89eb4bbb6aed9d6aebcabe99561d632b5de0744b` |
+| T009 | COMPLETE | clean WPF flow builds and full suite PASS | PASS — run `34576464106` | `4f1d9f94e463f78531adc7f99ac217049b062574` |
+| T010 | COMPLETE | warning E2E PASS | PASS — run `34577209657` | `cdaefe70b22d4f2568e0273b585ee6d20337970f` |
+| T011 | COMPLETE | typed input-failure E2E PASS | PASS — run `34578073133` | `ed5d44755df6a7767739c659b4d95a97786c9594` |
+| T012 | COMPLETE | save-recovery E2E + publisher unit tests PASS | PASS — run `34578888238` | `4e1ee91d6ca71b45f29fa594af9ca13034b28292` |
 
 ## Task Records
-### T001
+
+### T001 — Domain model and internal contracts
 STATUS: COMPLETE  
-BASE_BEFORE: `17592cc9c2ec48d8f767b622e031226bd2a48433`  
-FILES_CHANGED: `Model/DocumentModel.cs`, `Model/ConversionResult.cs`, five internal contract files under `Word/`, `Conversion/`, `Excel/`, `Validation/`  
-REUSE_DECISION: REUSE accepted .NET type system/contracts; no new dependency or subsystem.  
-VALIDATION: project build succeeded on PR CI.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34523442594` — PASS, including restore/audit/build/test/format/smoke/publish.  
-DEVIATIONS: NONE.  
-DECISIONS: typed read/legacy exceptions and validation result are kept internal with the accepted domain contracts.  
+RESULT: accepted source-preserving models, product result and internal reader/normalizer/writer/validator contracts compile.  
+VALIDATION: build PASS; downstream tests exercise the contracts.  
+FAST_CHECK: `34523442594` — PASS.  
 COMMIT: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`
 
-### T002
+### T002 — DOCX reader
 STATUS: COMPLETE  
-BASE_BEFORE: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`  
-FILES_CHANGED: `Word/DocxDocumentReader.cs`, `tests/.../Fixtures/DocxFixtureFactory.cs`, `tests/.../Integration/DocxDocumentReaderTests.cs`, plus `Properties/AssemblyInfo.cs` to expose internal production types to the existing test assembly.  
-REUSE_DECISION: REUSE `DocumentFormat.OpenXml 3.5.1` DOM/package APIs and T001 models/contracts; no parser dependency or second document model added.  
-VALIDATION: `DocxDocumentReaderTests` exercised ordered paragraphs/tables, merge hints, irregular/empty cells, nested-table separation, Unicode and unsupported drawing findings; final full test step PASS.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34525190440` — PASS, including restore/audit/build/test/format/smoke/publish.  
-DEVIATIONS: `Properties/AssemblyInfo.cs` was an unplanned but local testability detail (`InternalsVisibleTo`); no architecture or product behavior changed.  
-DECISIONS: nested table text is not duplicated into parent cell text; vertical-merge state is read from the Open XML enum value; empty technical paragraphs do not create spurious line breaks.  
+RESULT: ordered paragraphs/tables, merge hints, irregular and empty cells, nested-table separation, Unicode and unsupported drawing findings are represented without executing active content.  
+VALIDATION: `DocxDocumentReaderTests` PASS.  
+FAST_CHECK: `34525190440` — PASS.  
 COMMIT: `a4061c00decdf45f544f0cba0fe32114c46c3d52`
 
-### T003
+### T003 — Table normalization
 STATUS: COMPLETE  
-BASE_BEFORE: `5c16347077c8553f73b53071ab5d6dd8a2293d64`  
-FILES_CHANGED: `Conversion/TableNormalizer.cs`, `tests/.../Unit/TableNormalizerTests.cs`.  
-REUSE_DECISION: EXTEND the accepted T001 `TableModel`/`NormalizedTable` contract; no extra grid library or alternate table model.  
-VALIDATION: TDD RED was observed in run `34564354460` because `TableNormalizer` did not yet exist; final tests cover regular grids, horizontal spans, vertical merge continuation, irregular rows, real empty source cells and orphan continuation ambiguity.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34564595328` — PASS, including build/test/format/smoke/publish.  
-DEVIATIONS: NONE.  
-DECISIONS: covered merge coordinates carry empty generated cells with no `SourceCellId`; unmatched vertical continuation is preserved as an anchor plus `TABLE_VERTICAL_MERGE_AMBIGUOUS` warning rather than guessed/dropped.  
+RESULT: regular grids, horizontal spans, vertical continuations, irregular rows and ambiguity findings normalize to a deterministic rectangular model without silently guessing ambiguous merges.  
+VALIDATION: `TableNormalizerTests` PASS.  
+FAST_CHECK: `34564595328` — PASS.  
 COMMIT: `95467b68c771b840dc7381fd3f3ab3cb99b60e77`
 
-### T004
+### T004 — Lossless Excel value policy
 STATUS: COMPLETE  
-BASE_BEFORE: `642155c1993adb6f8a547c7bf328d1df2025ae7c`  
-FILES_CHANGED: `Conversion/ValuePolicy.cs`, `tests/.../Unit/ValuePolicyTests.cs`.  
-REUSE_DECISION: REUSE .NET BCL invariant parsing (`DateTime.TryParseExact`, `long.TryParse`) and the T001 `OutputValuePlan`; no locale/parser dependency added.  
-VALIDATION: TDD RED run `34564735987` failed only because `ValuePolicy` was absent; tests then passed for leading-zero IDs, >15-digit IDs, formula-like prefixes, strict positive integers, strict ISO dates, ambiguous decimals/dates and exact whitespace/line breaks.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34564873097` — PASS, including build/test/format/smoke/publish.  
-DEVIATIONS: NONE.  
-DECISIONS: only positive integer text with at most 15 digits and exact `yyyy-MM-dd` dates are auto-typed in MVP; ambiguous decimal/date forms and `= + - @` prefixes stay exact text.  
+RESULT: leading-zero IDs, >15-digit identifiers and formula-like text remain text; only intentionally safe integer/ISO-date cases are typed.  
+VALIDATION: `ValuePolicyTests` PASS.  
+FAST_CHECK: `34564873097` — PASS.  
 COMMIT: `9959e70c6dde808efaf096dac75f69f8af0baf69`
 
-### T005
+### T005 — Legacy `.doc` fidelity spike
 STATUS: COMPLETE — `LEGACY-DOC-001 = PASS`  
-BASE_BEFORE: `4783c1a9e07e6667e87bbacff4fe43ac675b60c5`  
-FILES_CHANGED: `tests/.../Integration/LegacyDocSpikeTests.cs`, `tests/.../Fixtures/LegacyDoc/README.md`, 12 binary `.doc` corpus fixtures. Temporary one-shot fixture-authoring workflows were created only to overcome the text-only GitHub connector and were removed before final validation.  
-REUSE_DECISION: REUSE `DocSharp.Binary.Doc 0.21.0` exactly as selected by Phase 06; no LibreOffice/Word/native process in the tested conversion path. LibreOffice was used only once to author deterministic binary test fixtures, then removed from the repository/runtime path.  
-VALIDATION: initial RED run `34571100619` failed because fixtures were absent. After corpus materialization, run `34571391910` exercised all 12 categories and exposed one invalid test fixture: its image was an authoring-time `INCLUDEPICTURE` link, not embedded data. That fixture was rejected, not treated as a DocSharp failure. It was replaced with Apache POI `PngPicture.doc` at commit `671a20eb...`; upstream `TestPictures.testPictureDetectionWithPNG` establishes one embedded picture. Final run `34571752300` passed all tests.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34571752300` — PASS, including locked restore/audit/build/test/format/smoke/publish.  
-DEVIATIONS: Task card listed only spike tests/fixtures; due the connected GitHub API being UTF-8 text-only, temporary CI fixture-authoring workflows were necessary to materialize binary `.doc` files. Both one-shot workflows were deleted before PASS. The image fixture provenance is recorded in the corpus README.  
-DECISIONS: the selected DocSharp path is accepted for MVP legacy `.doc` input on the required corpus. Protected documents are detected from the FIB encryption flag before conversion; damaged compound files are rejected. No fallback engine was introduced.  
+RESULT: selected `DocSharp.Binary.Doc 0.21.0` path passed the required 12-category legacy corpus; protected and damaged legacy containers are rejected. No Office/LibreOffice runtime fallback was introduced.  
+VALIDATION: `LegacyDocSpikeTests` PASS on the accepted corpus.  
+FAST_CHECK: `34571752300` — PASS.  
 COMMIT: `7261629630737d7f20c21036b68b46b03d88aa7d`
 
-### T006
+### T006 — XLSX generation and independent validation
 STATUS: COMPLETE  
-BASE_BEFORE: `2ce77783a5a6f34194ad7f3df7902984c0b15f52`  
-FILES_CHANGED: `Excel/ExcelWorkbookWriter.cs`, `Validation/OpenXmlOutputValidator.cs`, `tests/.../Integration/XlsxWriteReadbackTests.cs`.  
-REUSE_DECISION: REUSE `ClosedXML 0.105.1` only for serialization and `DocumentFormat.OpenXml 3.5.1` for independent reopen/readback; no second spreadsheet abstraction or dependency added.  
-VALIDATION: RED run `34572026380` failed because writer/validator implementations did not yet exist. First implementation run `34572314169` exposed compile-only defects (`System.IO` imports and an invalid `CellValues` pattern); these were fixed without changing task semantics. Final tests verify deterministic `Таблица N`/`Контекст`, exact leading-zero/long/formula-like text, typed safe number/date values, and absence of generated formulas.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34573733653` — PASS, including restore/audit/build/test/format/smoke/publish.  
-DIFF_SCOPE: compare `2ce77783... → 111356e9...` contains exactly the two declared production files plus the declared integration test.  
-DEVIATIONS: NONE.  
-DECISIONS: workbook generation and validation are independent at serialized-package level; publication remains blocked until T007 and therefore T006 writes only the requested output path supplied by its caller.  
+RESULT: `ClosedXML 0.105.1` serializes normalized output and `DocumentFormat.OpenXml 3.5.1` independently reopens/readbacks the package before publication. Generated formulas are not introduced.  
+VALIDATION: `XlsxWriteReadbackTests` PASS.  
+FAST_CHECK: `34573733653` — PASS.  
 COMMIT: `111356e991e0e9ff243ed281c73816c98fd55a19`
 
-### T007
+### T007 — Clean DOCX orchestration and safe publication
 STATUS: COMPLETE  
-BASE_BEFORE: `5660e7355a92d6e7c3ad9c58aa6828770eb17de5`  
-FILES_CHANGED: `Conversion/InputDetector.cs`, `Conversion/OutputPublisher.cs`, `Conversion/ConversionOrchestrator.cs`, `tests/.../E2E/DocxConversionTests.cs`, `tests/.../Unit/OutputPublisherTests.cs`.  
-REUSE_DECISION: REUSE T002 reader, T003 normalizer, T004 value policy, T006 writer/validator and BCL filesystem/ZIP APIs; no DI framework, queue, service or new runtime dependency.  
-VALIDATION: RED run `34574290584` failed because the T007 classes did not yet exist. Initial implementation run `34574422042` exposed only missing `System.IO` imports in detector/publisher; root cause was the WPF implicit-using set, not orchestration behavior. Final E2E/unit tests cover non-canonical `.`/`..` source forms, canonical output path, source byte equality, deterministic sheets/values/no formulas, validation-gate blocking, and `Name (1).xlsx` collision behavior.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34574622457` — PASS, including restore/audit/build/test/format/smoke/publish.  
-DIFF_SCOPE: compare `5660e735... → 1f82e7af...` contains exactly the three declared production files plus the two declared test files.  
-DEVIATIONS: NONE.  
-DECISIONS: `InputDetector` already distinguishes valid OLE `.doc` as `InputKind.Doc` for T008 but T007 does not route it; publication happens only after independent validator PASS; output collision resolution is canonical-path based and never overwrites an existing workbook.  
+RESULT: detector → reader → normalizer → value policy → XLSX writer → independent validator → publisher works end-to-end; validation blocks publication on failure; output collisions resolve without overwrite.  
+VALIDATION: DOCX E2E and `OutputPublisherTests` PASS.  
+FAST_CHECK: `34574622457` — PASS.  
 COMMIT: `1f82e7af7722612454d5b21ad04cbc21e979233f`
 
-### T008
+### T008 — Legacy DOC integration
 STATUS: COMPLETE  
-BASE_BEFORE: `939cd82263bda2215406a5396354fbf30c6a29aa`  
-FILES_CHANGED: `Word/LegacyDocConverter.cs`, `Conversion/ConversionOrchestrator.cs`, `tests/.../E2E/LegacyDocConversionTests.cs`.  
-REUSE_DECISION: REUSE the T005-approved `DocSharp.Binary.Doc 0.21.0` API and the complete T007 pipeline; no alternate parser, Office process, LibreOffice fallback, or second writer path.  
-VALIDATION: RED run `34574959917` failed because `LegacyDocConverter` was not yet materialized. Final E2E verifies an approved `simple-table.doc` through a non-canonical source path produces the common validated workbook (`A/B/C/D`, `Таблица 1`, `Контекст`) beside the canonical source while source bytes stay unchanged; protected `.doc` is rejected before a temporary `.docx` is left behind.  
-FAST_CHECK: GitHub Actions `bootstrap-check` run `34575233210` — PASS, including restore/audit/build/test/format/smoke/publish.  
-DIFF_SCOPE: compare `939cd822... → 89eb4bbb...` contains exactly the declared adapter, shared-orchestrator modification, and legacy E2E test.  
-DEVIATIONS: NONE.  
-DECISIONS: legacy conversion happens only inside the per-session temp directory; both `.doc` and `.docx` converge on the same reader/normalizer/value-policy/writer/validator/publisher path; final naming remains based on the original canonical `.doc` path.  
+RESULT: `.doc` is converted only inside the per-session temporary directory and then converges on the same reader/normalizer/value-policy/writer/validator/publisher path as `.docx`; final naming remains based on the original source.  
+VALIDATION: `LegacyDocConversionTests` PASS; source bytes remain unchanged.  
+FAST_CHECK: `34575233210` — PASS.  
 COMMIT: `89eb4bbb6aed9d6aebcabe99561d632b5de0744b`
 
+### T009 — Clean interactive WPF conversion flow
+STATUS: COMPLETE  
+BASE_BEFORE: `3da09dabb9b717c55216152b9f6d0e35149c5c68`  
+FILES_CHANGED: `App.xaml`, `App.xaml.cs`, new `Assets/Icons.xaml`, `MainWindow.xaml`, `MainWindow.xaml.cs`.  
+RESULT: bootstrap placeholder replaced by the native WPF user flow: choose/drop Word file → explicit conversion → visible result, output path and recovery/reset controls. The production `ConversionOrchestrator` is wired into application startup.  
+VALIDATION: project build, full automated suite, format verification, bootstrap smoke and portable publish PASS.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34576464106` — PASS.  
+DEVIATIONS: visual resources were added in `Assets/Icons.xaml` as part of the accepted WPF surface; no new runtime subsystem or service.  
+COMMIT: `4f1d9f94e463f78531adc7f99ac217049b062574`
+
+### T010 — Warning and partial-result flows
+STATUS: COMPLETE  
+BASE_BEFORE: `4f1d9f94e463f78531adc7f99ac217049b062574`  
+FILES_CHANGED: `Assets/Icons.xaml`, `Conversion/ConversionOrchestrator.cs`, `MainWindow.xaml`, `MainWindow.xaml.cs`, new `tests/WordToExcel.Tests/E2E/WarningConversionTests.cs`.  
+RESULT: ambiguity/unsupported-object findings are surfaced to the user; documents without tables produce an explicit `NO_TABLES` warning while preserving ordinary text on `Контекст`; final UI state is `Готово с предупреждениями` rather than false clean success.  
+VALIDATION: `WarningConversionTests` plus full suite PASS.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34577209657` — PASS.  
+DEVIATIONS: NONE.  
+COMMIT: `cdaefe70b22d4f2568e0273b585ee6d20337970f`
+
+### T011 — Typed unsupported/protected/corrupt input failures
+STATUS: COMPLETE  
+BASE_BEFORE: `cdaefe70b22d4f2568e0273b585ee6d20337970f`  
+FILES_CHANGED: `Conversion/ConversionOrchestrator.cs`, `Conversion/InputDetector.cs`, new `tests/WordToExcel.Tests/E2E/InputFailureTests.cs`, invalid-input fixtures and fixture README.  
+RESULT: extension alone is not trusted; unsupported, corrupt and encrypted/protected Word inputs are classified as typed failures and never reported as success. Encrypted OOXML compound containers are identified before conversion.  
+VALIDATION: `InputFailureTests` plus full suite PASS.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34578073133` — PASS.  
+DEVIATIONS: one temporary GitHub Actions workflow materialized the binary encrypted DOCX fixture from the provenance-pinned Apache POI source; the workflow was removed before task completion and is not a runtime dependency.  
+COMMIT: `ed5d44755df6a7767739c659b4d95a97786c9594`
+
+### T012 — Save recovery to alternate destination
+STATUS: COMPLETE  
+BASE_BEFORE: `ed5d44755df6a7767739c659b4d95a97786c9594`  
+FILES_CHANGED: `Conversion/ConversionOrchestrator.cs`, `Conversion/OutputPublisher.cs`, `MainWindow.xaml`, `MainWindow.xaml.cs`, new `tests/WordToExcel.Tests/E2E/SaveRecoveryTests.cs`, extended `tests/WordToExcel.Tests/Unit/OutputPublisherTests.cs`.  
+RESULT: output-write failure produces a visible recovery action; user may select another folder; alternate destination is canonicalized before use; collision handling remains non-overwriting.  
+VALIDATION: `SaveRecoveryTests`, `OutputPublisherTests` and full suite PASS.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34578888238` — PASS.  
+DEVIATIONS: NONE.  
+COMMIT: `4e1ee91d6ca71b45f29fa594af9ca13034b28292`
+
+## Post-task Hardening
+After T012, two WPF foreground fixes were applied so light application surfaces remain readable even when Windows itself is using a dark theme:
+- `e13c6060d241781cdcdc530d3529383d2d4aab59` — keep light-surface text readable in dark Windows theme.
+- `53f1c9a3e48bb615e2ca2c8c2f9bd86131e01c0b` — pin readable foreground for the light application theme.
+
+CI packaging was then changed from a self-contained folder artifact to a single-file Windows executable:
+- PRODUCT_HEAD_BEFORE_DOC_CLOSEOUT: `dc406eb5d64f57f2d4e037ab0aeb2fbf8a7c4055`
+- change: `dotnet publish ... -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -p:IncludeNativeLibrariesForSelfExtract=true`
+- staged artifact: `WordToExcel-win-x64-single-exe` containing `WordToExcel.exe`
+- GitHub Actions `bootstrap-check` run `34582652988` — PASS on `dc406eb5d64f57f2d4e037ab0aeb2fbf8a7c4055`.
+
 ## Build Deviations
-- T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
-- T005 used temporary one-shot GitHub Actions workflows solely to author/replace binary test fixtures because the connector cannot write arbitrary binary content. Those workflows were removed before the task PASS; they are not product/runtime dependencies.
+- T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API was introduced.
+- T005 used temporary one-shot GitHub Actions workflows solely to materialize/replace binary legacy fixtures because the connected text API could not author those binaries directly. The workflows were removed before PASS and are not runtime dependencies.
+- T011 used the same temporary-fixture pattern for one encrypted DOCX corpus item; provenance is recorded with the fixture and the workflow was removed before PASS.
+- No Office process, LibreOffice runtime fallback, network service, database or background service was added to the product path.
 
 ## Upstream Returns
 - NONE
 
-## Observations For Phase 11
-- T005's locally-authored image candidate was invalid because it was a linked `INCLUDEPICTURE`; the final corpus uses a provenance-backed embedded-image fixture instead.
+## Acceptance Gate
+Automated implementation is complete. Phase 10 remains intentionally unmerged until an interactive Windows smoke is completed against the produced single-file executable.
+
+Required manual smoke before merge:
+1. Launch `WordToExcel.exe` on Windows without relying on the repository checkout.
+2. Convert one real `.docx` containing at least one table and surrounding text.
+3. Convert one real or corpus-approved `.doc`.
+4. Open the generated `.xlsx` in Excel and confirm the workbook is readable and the expected table/context sheets are present.
+5. Exercise at least one warning/error path if convenient (for example a document without tables or a protected/invalid input).
+
+Acceptance result must be recorded before the PR is merged.
 
 ## Final Build State
-HEAD: current `build/phase-10` head  
-Worktree: isolated remote branch  
-Pending tasks: 4  
-Fast check: PASS through T008 (`34575233210`)  
-Known non-blocking issues: NONE from completed tasks; T009–T012 remain.
+Product implementation head before documentation closeout: `dc406eb5d64f57f2d4e037ab0aeb2fbf8a7c4055`  
+Branch: `build/phase-10`  
+PR: `#1 Phase 10 — Build`  
+Pending implementation tasks: 0  
+Pending acceptance: interactive Windows smoke  
+Latest product-head fast check: PASS — run `34582652988`  
+Single-file artifact: `WordToExcel-win-x64-single-exe`  
+Known blocking implementation issues: NONE  
+Merge gate: INTERACTIVE_SMOKE_REQUIRED
 
 ## Handoff
-NEXT_PHASE: NONE  
+NEXT_PHASE: INTERACTIVE_ACCEPTANCE  
 RETURN_TO_PHASE: NONE
