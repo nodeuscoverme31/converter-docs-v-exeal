@@ -158,7 +158,8 @@ The approved remediation keeps the existing architecture and adds only Excel-out
 TDD evidence:
 - RED run `34591967944`: 60 tests total, 6 expected failures for the missing decimal/formatting behavior;
 - subsequent investigation confirmed ClosedXML serializes a requested width of 45 as `45.710625` and `FreezeRows(1)` as OpenXML `state="frozenSplit"`; tests were aligned to the actual serialized format without weakening the production clamp or freeze behavior;
-- GREEN run `34592875962`: restore/audit, build, all 60 tests, format check, bootstrap smoke, single-file Windows publish, canonical-doc check and rolling `test-latest` publication PASS.
+- GREEN product run `34592875962`: restore/audit, build, all 60 tests, format check, bootstrap smoke, single-file Windows publish, canonical-doc check and rolling `test-latest` publication PASS;
+- final documentation-closeout run `34593197788`: the same full workflow PASS on the final recorded branch state and refreshed `test-latest`.
 
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API was introduced.
@@ -187,7 +188,7 @@ Branch: `build/phase-10`
 PR: `#1 Phase 10 — Build`  
 Pending implementation tasks: 0  
 Pending acceptance: refreshed interactive Windows smoke  
-Latest verified product run before this documentation-only closeout: PASS — run `34592875962`  
+Latest full branch verification: PASS — run `34593197788`  
 Tests in verified product run: 60/60 PASS  
 Rolling test release: `test-latest` with single `WordToExcel.exe`  
 Known blocking implementation issues: NONE from automated verification  
