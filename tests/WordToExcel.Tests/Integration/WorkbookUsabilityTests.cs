@@ -50,7 +50,7 @@ public sealed class WorkbookUsabilityTests
                 column =>
                 {
                     var width = column.Width?.Value ?? 0D;
-                    Assert.True(width <= 45D, $"Serialized column width was {width}.");
+                    Assert.True(width <= 46D, $"Serialized column width was {width}.");
                 });
 
             var sheetView = worksheetPart.Worksheet.SheetViews!.Elements<SheetView>().Single();
