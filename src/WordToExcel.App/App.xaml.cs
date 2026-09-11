@@ -1,4 +1,5 @@
 using System.Windows;
+using WordToExcel.App.Conversion;
 
 namespace WordToExcel.App;
 
@@ -14,7 +15,7 @@ public partial class App : Application
 
         base.OnStartup(e);
 
-        var window = new MainWindow();
+        var window = new MainWindow(new ConversionOrchestrator());
         MainWindow = window;
         window.Show();
     }
