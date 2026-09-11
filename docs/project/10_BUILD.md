@@ -23,7 +23,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T004 | COMPLETE | unit tests PASS | PASS — run 34564873097 | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
 | T005 | COMPLETE | 12-category legacy spike PASS | PASS — run 34571752300 | `7261629630737d7f20c21036b68b46b03d88aa7d` |
 | T006 | COMPLETE | integration readback tests PASS | PASS — run 34573733653 | `111356e991e0e9ff243ed281c73816c98fd55a19` |
-| T007 | PENDING | — | — | — |
+| T007 | COMPLETE | E2E + publisher tests PASS | PASS — run 34574622457 | `1f82e7af7722612454d5b21ad04cbc21e979233f` |
 | T008 | PENDING | — | — | — |
 | T009 | PENDING | — | — | — |
 | T010 | PENDING | — | — | — |
@@ -98,6 +98,18 @@ DEVIATIONS: NONE.
 DECISIONS: workbook generation and validation are independent at serialized-package level; publication remains blocked until T007 and therefore T006 writes only the requested output path supplied by its caller.  
 COMMIT: `111356e991e0e9ff243ed281c73816c98fd55a19`
 
+### T007
+STATUS: COMPLETE  
+BASE_BEFORE: `5660e7355a92d6e7c3ad9c58aa6828770eb17de5`  
+FILES_CHANGED: `Conversion/InputDetector.cs`, `Conversion/OutputPublisher.cs`, `Conversion/ConversionOrchestrator.cs`, `tests/.../E2E/DocxConversionTests.cs`, `tests/.../Unit/OutputPublisherTests.cs`.  
+REUSE_DECISION: REUSE T002 reader, T003 normalizer, T004 value policy, T006 writer/validator and BCL filesystem/ZIP APIs; no DI framework, queue, service or new runtime dependency.  
+VALIDATION: RED run `34574290584` failed because the T007 classes did not yet exist. Initial implementation run `34574422042` exposed only missing `System.IO` imports in detector/publisher; root cause was the WPF implicit-using set, not orchestration behavior. Final E2E/unit tests cover non-canonical `.`/`..` source forms, canonical output path, source byte equality, deterministic sheets/values/no formulas, validation-gate blocking, and `Name (1).xlsx` collision behavior.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34574622457` — PASS, including restore/audit/build/test/format/smoke/publish.  
+DIFF_SCOPE: compare `5660e735... → 1f82e7af...` contains exactly the three declared production files plus the two declared test files.  
+DEVIATIONS: NONE.  
+DECISIONS: `InputDetector` already distinguishes valid OLE `.doc` as `InputKind.Doc` for T008 but T007 does not route it; publication happens only after independent validator PASS; output collision resolution is canonical-path based and never overwrites an existing workbook.  
+COMMIT: `1f82e7af7722612454d5b21ad04cbc21e979233f`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 - T005 used temporary one-shot GitHub Actions workflows solely to author/replace binary test fixtures because the connector cannot write arbitrary binary content. Those workflows were removed before the task PASS; they are not product/runtime dependencies.
@@ -111,9 +123,9 @@ COMMIT: `111356e991e0e9ff243ed281c73816c98fd55a19`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 6  
-Fast check: PASS through T006 (`34573733653`)  
-Known non-blocking issues: NONE from completed tasks; T007–T012 remain.
+Pending tasks: 5  
+Fast check: PASS through T007 (`34574622457`)  
+Known non-blocking issues: NONE from completed tasks; T008–T012 remain.
 
 ## Handoff
 NEXT_PHASE: NONE  
