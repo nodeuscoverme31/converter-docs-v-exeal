@@ -4,13 +4,18 @@ namespace WordToExcel.App.Conversion;
 
 internal sealed class OutputPublisher
 {
-    public string GetDefaultOutputPath(string sourcePath)
+    public string GetDefaultOutputPath(string sourcePath) =>
+        GetOutputPath(sourcePath, destinationDirectory: null);
+
+    public string GetOutputPath(string sourcePath, string? destinationDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         var canonicalSource = Path.GetFullPath(sourcePath);
-        var directory = Path.GetDirectoryName(canonicalSource)
-            ?? throw new IOException("Source document does not have a destination directory.");
-        var canonicalDirectory = Path.GetFullPath(directory);
+        var canonicalDirectory = string.IsNullOrWhiteSpace(destinationDirectory)
+            ? Path.GetDirectoryName(canonicalSource)
+                ?? throw new IOException("Source document does not have a destination directory.")
+            : Path.GetFullPath(destinationDirectory);
+        canonicalDirectory = Path.GetFullPath(canonicalDirectory);
         var baseName = Path.GetFileNameWithoutExtension(canonicalSource);
 
         for (var index = 0; ; index++)
@@ -32,17 +37,23 @@ internal sealed class OutputPublisher
         }
     }
 
-    public string Publish(string validatedTempPath, string sourcePath)
+    public string Publish(string validatedTempPath, string sourcePath) =>
+        Publish(validatedTempPath, sourcePath, destinationDirectory: null);
+
+    public string Publish(string validatedTempPath, string sourcePath, string? destinationDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(validatedTempPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
 
         var canonicalTemp = Path.GetFullPath(validatedTempPath);
         var canonicalSource = Path.GetFullPath(sourcePath);
+        var canonicalDestinationDirectory = string.IsNullOrWhiteSpace(destinationDirectory)
+            ? null
+            : Path.GetFullPath(destinationDirectory);
 
         while (true)
         {
-            var candidate = GetDefaultOutputPath(canonicalSource);
+            var candidate = GetOutputPath(canonicalSource, canonicalDestinationDirectory);
             try
             {
                 File.Copy(canonicalTemp, candidate, overwrite: false);

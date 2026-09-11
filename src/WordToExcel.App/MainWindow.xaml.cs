@@ -68,6 +68,30 @@ public partial class MainWindow : Window
 
     private async void ConvertButton_Click(object sender, RoutedEventArgs e)
     {
+        await ConvertSelectedAsync(destinationDirectory: null);
+    }
+
+    private async void AlternateFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (selectedFilePath is null)
+        {
+            return;
+        }
+
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Выберите папку для Excel-файла",
+            Multiselect = false,
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            await ConvertSelectedAsync(dialog.FolderName);
+        }
+    }
+
+    private async Task ConvertSelectedAsync(string? destinationDirectory)
+    {
         var sourcePath = selectedFilePath;
         if (sourcePath is null)
         {
@@ -79,7 +103,7 @@ public partial class MainWindow : Window
 
         try
         {
-            result = await Task.Run(() => orchestrator.Convert(sourcePath));
+            result = await Task.Run(() => orchestrator.Convert(sourcePath, destinationDirectory));
         }
         catch (Exception)
         {
@@ -154,6 +178,7 @@ public partial class MainWindow : Window
         WarningDetailsPanel.Visibility = Visibility.Collapsed;
         ResultPathText.Text = string.Empty;
         OpenFolderButton.Visibility = Visibility.Visible;
+        AlternateFolderButton.Visibility = Visibility.Collapsed;
         DropTitleText.Text = "Файл выбран — можно преобразовывать";
     }
 
@@ -165,6 +190,7 @@ public partial class MainWindow : Window
         DropZoneBorder.AllowDrop = !isProcessing;
         ResetButton.IsEnabled = !isProcessing;
         OpenFolderButton.IsEnabled = !isProcessing;
+        AlternateFolderButton.IsEnabled = !isProcessing;
 
         if (isProcessing)
         {
@@ -187,6 +213,9 @@ public partial class MainWindow : Window
         ResultPathText.Visibility = hasOutput ? Visibility.Visible : Visibility.Collapsed;
         ResultPathText.Text = result.OutputPath ?? string.Empty;
         OpenFolderButton.Visibility = hasOutput ? Visibility.Visible : Visibility.Collapsed;
+        AlternateFolderButton.Visibility = result.Status == ConversionStatus.Error && result.ErrorCategory == ConversionErrorCategory.OutputWrite
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         if (result.Status == ConversionStatus.Success)
         {
@@ -214,7 +243,9 @@ public partial class MainWindow : Window
         }
 
         ResultIcon.Visibility = Visibility.Collapsed;
-        ResultTitleText.Text = "Не удалось преобразовать";
+        ResultTitleText.Text = result.ErrorCategory == ConversionErrorCategory.OutputWrite
+            ? "Не удалось сохранить Excel-файл"
+            : "Не удалось преобразовать";
         WarningDetailsPanel.Visibility = Visibility.Collapsed;
         WarningItemsControl.ItemsSource = null;
     }
@@ -230,6 +261,7 @@ public partial class MainWindow : Window
         WarningDetailsPanel.Visibility = Visibility.Collapsed;
         WarningItemsControl.ItemsSource = null;
         OpenFolderButton.Visibility = Visibility.Collapsed;
+        AlternateFolderButton.Visibility = Visibility.Collapsed;
     }
 
     private void ResetUi()
@@ -250,6 +282,7 @@ public partial class MainWindow : Window
         ResultIcon.Data = (Geometry)FindResource("SuccessIconGeometry");
         ResultIcon.Stroke = (Brush)FindResource("AppSuccessBrush");
         OpenFolderButton.Visibility = Visibility.Visible;
+        AlternateFolderButton.Visibility = Visibility.Collapsed;
         ChooseFileButton.IsEnabled = true;
         ConvertButton.IsEnabled = false;
         DropZoneBorder.AllowDrop = true;

@@ -70,7 +70,10 @@ internal sealed class ConversionOrchestrator
         this.outputPublisher = outputPublisher ?? throw new ArgumentNullException(nameof(outputPublisher));
     }
 
-    public ConversionResult Convert(string sourcePath)
+    public ConversionResult Convert(string sourcePath) =>
+        Convert(sourcePath, destinationDirectory: null);
+
+    public ConversionResult Convert(string sourcePath, string? destinationDirectory)
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
         {
@@ -85,6 +88,19 @@ internal sealed class ConversionOrchestrator
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
             return Error(ConversionErrorCategory.ReadFailure, "Не удалось определить путь к исходному файлу.");
+        }
+
+        string? canonicalDestinationDirectory = null;
+        if (!string.IsNullOrWhiteSpace(destinationDirectory))
+        {
+            try
+            {
+                canonicalDestinationDirectory = Path.GetFullPath(destinationDirectory);
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                return Error(ConversionErrorCategory.OutputWrite, "Не удалось определить папку для сохранения Excel-файла.");
+            }
         }
 
         InputKind inputKind;
@@ -174,7 +190,7 @@ internal sealed class ConversionOrchestrator
                     "Созданный Excel не прошёл проверку сохранности данных.");
             }
 
-            var outputPath = outputPublisher.Publish(tempXlsx, canonicalSource);
+            var outputPath = outputPublisher.Publish(tempXlsx, canonicalSource, canonicalDestinationDirectory);
             return new ConversionResult(
                 distinctWarnings.Length == 0 ? ConversionStatus.Success : ConversionStatus.Warning,
                 distinctWarnings.Length == 0 ? "Готово." : "Готово с предупреждениями.",
@@ -183,7 +199,9 @@ internal sealed class ConversionOrchestrator
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return Error(ConversionErrorCategory.OutputWrite, "Не удалось сохранить Excel-файл.");
+            return Error(
+                ConversionErrorCategory.OutputWrite,
+                "Не удалось сохранить Excel-файл. Выберите другую папку и попробуйте снова.");
         }
         finally
         {
