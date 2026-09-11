@@ -18,7 +18,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | Task | Status | Validation | Fast Check | Commit |
 |---|---|---|---|---|
 | T001 | COMPLETE | build PASS | PASS — run 34523442594 | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
-| T002 | PENDING | — | — | — |
+| T002 | COMPLETE | integration tests PASS | PASS — run 34525190440 | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
 | T003 | PENDING | — | — | — |
 | T004 | PENDING | — | — | — |
 | T005 | PENDING | — | — | — |
@@ -42,8 +42,19 @@ DEVIATIONS: NONE.
 DECISIONS: typed read/legacy exceptions and validation result are kept internal with the accepted domain contracts.  
 COMMIT: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`
 
+### T002
+STATUS: COMPLETE  
+BASE_BEFORE: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`  
+FILES_CHANGED: `Word/DocxDocumentReader.cs`, `tests/.../Fixtures/DocxFixtureFactory.cs`, `tests/.../Integration/DocxDocumentReaderTests.cs`, plus `Properties/AssemblyInfo.cs` to expose internal production types to the existing test assembly.  
+REUSE_DECISION: REUSE `DocumentFormat.OpenXml 3.5.1` DOM/package APIs and T001 models/contracts; no parser dependency or second document model added.  
+VALIDATION: `DocxDocumentReaderTests` exercised ordered paragraphs/tables, merge hints, irregular/empty cells, nested-table separation, Unicode and unsupported drawing findings; final full test step PASS.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34525190440` — PASS, including restore/audit/build/test/format/smoke/publish.  
+DEVIATIONS: `Properties/AssemblyInfo.cs` was an unplanned but local testability detail (`InternalsVisibleTo`); no architecture or product behavior changed.  
+DECISIONS: nested table text is not duplicated into parent cell text; vertical-merge state is read from the Open XML enum value; empty technical paragraphs do not create spurious line breaks.  
+COMMIT: `a4061c00decdf45f544f0cba0fe32114c46c3d52`
+
 ## Build Deviations
-- NONE
+- T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 
 ## Upstream Returns
 - NONE
@@ -54,8 +65,8 @@ COMMIT: `175e5b04cb3d9c91a64905ad3e98e335cffa8a49`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 11  
-Fast check: PASS through T001  
+Pending tasks: 10  
+Fast check: PASS through T002 (`34525190440`)  
 Known non-blocking issues: `LEGACY-DOC-001` must PASS before T008.
 
 ## Handoff
