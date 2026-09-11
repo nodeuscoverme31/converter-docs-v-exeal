@@ -6,6 +6,9 @@ namespace WordToExcel.App.Excel;
 
 internal sealed class ExcelWorkbookWriter : IExcelWorkbookWriter
 {
+    private const double MinimumColumnWidth = 10D;
+    private const double MaximumColumnWidth = 45D;
+
     public void Write(
         DocumentModel document,
         IReadOnlyList<NormalizedTable> normalizedTables,
@@ -41,6 +44,8 @@ internal sealed class ExcelWorkbookWriter : IExcelWorkbookWriter
                 var cell = worksheet.Cell(normalizedCell.Row + 1, normalizedCell.Column + 1);
                 WriteValue(cell, plan);
             }
+
+            FormatWorksheet(worksheet, table.Width, table.Height);
         }
 
         WriteContextSheet(workbook, document, sheetNamesByTableId);
@@ -57,6 +62,11 @@ internal sealed class ExcelWorkbookWriter : IExcelWorkbookWriter
 
             case ValueMode.SafeNumber:
                 cell.Value = Convert.ToDouble(plan.ExcelValue, System.Globalization.CultureInfo.InvariantCulture);
+                if (!string.IsNullOrWhiteSpace(plan.NumberFormat))
+                {
+                    cell.Style.NumberFormat.Format = plan.NumberFormat;
+                }
+
                 break;
 
             case ValueMode.SafeDate:
@@ -117,6 +127,32 @@ internal sealed class ExcelWorkbookWriter : IExcelWorkbookWriter
             }
 
             row++;
+        }
+
+        FormatWorksheet(worksheet, 3, row - 1);
+    }
+
+    private static void FormatWorksheet(IXLWorksheet worksheet, int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var usedRange = worksheet.Range(1, 1, height, width);
+        usedRange.Style.Alignment.WrapText = true;
+        worksheet.Range(1, 1, 1, width).Style.Font.Bold = true;
+
+        if (height > 1)
+        {
+            worksheet.SheetView.FreezeRows(1);
+        }
+
+        for (var columnIndex = 1; columnIndex <= width; columnIndex++)
+        {
+            var column = worksheet.Column(columnIndex);
+            column.AdjustToContents(1, height);
+            column.Width = Math.Clamp(column.Width, MinimumColumnWidth, MaximumColumnWidth);
         }
     }
 
