@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace WordToExcel.App.Conversion;
 
 internal sealed class OutputPublisher
