@@ -57,6 +57,14 @@ jobs:
           if (-not $exe) { throw "Published executable not found" }
           Write-Host "Published executable: $($exe.FullName)"
 
+      - name: Upload portable Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: WordToExcel-win-x64-portable
+          path: src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Verify canonical lifecycle docs and notices
         shell: pwsh
         run: |
