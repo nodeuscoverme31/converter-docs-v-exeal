@@ -151,6 +151,7 @@ public partial class MainWindow : Window
         SelectedFileCard.Visibility = Visibility.Visible;
         ConvertButton.IsEnabled = true;
         ResultCard.Visibility = Visibility.Collapsed;
+        WarningDetailsPanel.Visibility = Visibility.Collapsed;
         ResultPathText.Text = string.Empty;
         OpenFolderButton.Visibility = Visibility.Visible;
         DropTitleText.Text = "Файл выбран — можно преобразовывать";
@@ -190,21 +191,32 @@ public partial class MainWindow : Window
         if (result.Status == ConversionStatus.Success)
         {
             ResultIcon.Visibility = Visibility.Visible;
+            ResultIcon.Data = (Geometry)FindResource("SuccessIconGeometry");
             ResultIcon.Stroke = (Brush)FindResource("AppSuccessBrush");
             ResultTitleText.Text = "Готово";
+            WarningDetailsPanel.Visibility = Visibility.Collapsed;
+            WarningItemsControl.ItemsSource = null;
             return;
         }
 
         if (result.Status == ConversionStatus.Warning)
         {
             ResultIcon.Visibility = Visibility.Visible;
+            ResultIcon.Data = (Geometry)FindResource("WarningIconGeometry");
             ResultIcon.Stroke = (Brush)FindResource("AppWarningBrush");
             ResultTitleText.Text = "Готово с предупреждениями";
+            WarningItemsControl.ItemsSource = result.EffectiveWarnings
+                .Select(UserFacingWarning)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            WarningDetailsPanel.Visibility = Visibility.Visible;
             return;
         }
 
         ResultIcon.Visibility = Visibility.Collapsed;
         ResultTitleText.Text = "Не удалось преобразовать";
+        WarningDetailsPanel.Visibility = Visibility.Collapsed;
+        WarningItemsControl.ItemsSource = null;
     }
 
     private void ShowUnexpectedFailure()
@@ -215,6 +227,8 @@ public partial class MainWindow : Window
         ResultTitleText.Text = "Не удалось преобразовать";
         ResultMessageText.Text = "Во время преобразования произошла непредвиденная ошибка. Исходный документ не изменён.";
         ResultPathText.Visibility = Visibility.Collapsed;
+        WarningDetailsPanel.Visibility = Visibility.Collapsed;
+        WarningItemsControl.ItemsSource = null;
         OpenFolderButton.Visibility = Visibility.Collapsed;
     }
 
@@ -226,11 +240,15 @@ public partial class MainWindow : Window
         SelectedFilePathText.Text = string.Empty;
         ResultMessageText.Text = string.Empty;
         ResultPathText.Text = string.Empty;
+        WarningItemsControl.ItemsSource = null;
         SelectedFileCard.Visibility = Visibility.Collapsed;
         ProcessingPanel.Visibility = Visibility.Collapsed;
         ResultCard.Visibility = Visibility.Collapsed;
+        WarningDetailsPanel.Visibility = Visibility.Collapsed;
         ResultPathText.Visibility = Visibility.Visible;
         ResultIcon.Visibility = Visibility.Visible;
+        ResultIcon.Data = (Geometry)FindResource("SuccessIconGeometry");
+        ResultIcon.Stroke = (Brush)FindResource("AppSuccessBrush");
         OpenFolderButton.Visibility = Visibility.Visible;
         ChooseFileButton.IsEnabled = true;
         ConvertButton.IsEnabled = false;
@@ -243,6 +261,14 @@ public partial class MainWindow : Window
     {
         DropZoneBorder.BorderBrush = (Brush)FindResource("AppBorderBrush");
     }
+
+    private static string UserFacingWarning(ConversionFinding finding) => finding.Code switch
+    {
+        "UNSUPPORTED_OBJECT" => "Изображение или встроенный объект не перенесён в Excel. Таблицы и обычный текст сохранены.",
+        "TABLE_VERTICAL_MERGE_AMBIGUOUS" => "В одной из таблиц неоднозначное объединение ячеек. Данные сохранены без догадок — проверьте этот участок.",
+        "NO_TABLES" => "Таблицы не найдены. Обычный текст сохранён на листе «Контекст».",
+        _ => "В исходном документе есть особенность, которую стоит проверить в созданном Excel-файле.",
+    };
 
     private static bool TryGetDroppedWordFile(IDataObject data, out string? path)
     {

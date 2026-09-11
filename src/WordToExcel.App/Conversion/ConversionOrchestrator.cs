@@ -145,6 +145,17 @@ internal sealed class ConversionOrchestrator
             var warnings = document.Findings
                 .Concat(normalizedTables.SelectMany(table => table.Findings))
                 .Where(finding => finding.Severity == FindingSeverity.Warning)
+                .ToList();
+
+            if (document.Tables.Count == 0)
+            {
+                warnings.Add(new ConversionFinding(
+                    "NO_TABLES",
+                    "Таблицы не найдены. Обычный текст сохранён на листе «Контекст».",
+                    FindingSeverity.Warning));
+            }
+
+            var distinctWarnings = warnings
                 .Distinct()
                 .ToArray();
 
@@ -160,10 +171,10 @@ internal sealed class ConversionOrchestrator
 
             var outputPath = outputPublisher.Publish(tempXlsx, canonicalSource);
             return new ConversionResult(
-                warnings.Length == 0 ? ConversionStatus.Success : ConversionStatus.Warning,
-                warnings.Length == 0 ? "Готово." : "Готово с предупреждениями.",
+                distinctWarnings.Length == 0 ? ConversionStatus.Success : ConversionStatus.Warning,
+                distinctWarnings.Length == 0 ? "Готово." : "Готово с предупреждениями.",
                 outputPath,
-                warnings);
+                distinctWarnings);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

@@ -4,7 +4,7 @@
         xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
         Title="Word → Excel"
         Width="820"
-        Height="610"
+        Height="650"
         MinWidth="560"
         MinHeight="470"
         Background="{StaticResource AppBackgroundBrush}"
@@ -194,6 +194,40 @@
                        Margin="0,5,0,0"
                        Foreground="{StaticResource AppMutedTextBrush}"
                        TextWrapping="Wrap" />
+
+            <Border x:Name="WarningDetailsPanel"
+                    Margin="0,12,0,0"
+                    Padding="12"
+                    Background="{StaticResource AppWarningSurfaceBrush}"
+                    BorderBrush="{StaticResource AppWarningBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock FontWeight="SemiBold"
+                           Text="Что нужно проверить" />
+                <ItemsControl x:Name="WarningItemsControl" Margin="0,6,0,0">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,2,0,2">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Margin="0,0,7,0"
+                                   FontWeight="Bold"
+                                   Text="•" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding}"
+                                   TextWrapping="Wrap" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
             <TextBlock x:Name="ResultPathText"
                        Margin="0,9,0,0"
                        FontSize="12"

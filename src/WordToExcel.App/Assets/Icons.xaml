@@ -8,10 +8,12 @@
   <SolidColorBrush x:Key="AppMutedTextBrush" Color="#605E5C" />
   <SolidColorBrush x:Key="AppSuccessBrush" Color="#107C10" />
   <SolidColorBrush x:Key="AppWarningBrush" Color="#8A5A00" />
+  <SolidColorBrush x:Key="AppWarningSurfaceBrush" Color="#FFF8E1" />
   <SolidColorBrush x:Key="AppErrorBrush" Color="#A4262C" />
 
   <StreamGeometry x:Key="DocumentIconGeometry">M4,2 L13,2 L20,9 L20,22 L4,22 Z M13,2 L13,9 L20,9</StreamGeometry>
   <StreamGeometry x:Key="SuccessIconGeometry">M3,12 L9,18 L21,5</StreamGeometry>
+  <StreamGeometry x:Key="WarningIconGeometry">M12,2 L22,21 L2,21 Z M12,8 L12,14 M12,17 L12,18</StreamGeometry>
   <StreamGeometry x:Key="FolderIconGeometry">M2,6 L9,6 L11,9 L22,9 L20,21 L4,21 Z</StreamGeometry>
   <StreamGeometry x:Key="ResetIconGeometry">M20,8 C18,4 14,2 10,3 C6,4 3,7 3,12 C3,17 7,21 12,21 C16,21 19,19 21,16 M20,8 L20,3 M20,8 L15,8</StreamGeometry>
 </ResourceDictionary>
