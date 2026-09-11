@@ -21,7 +21,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 | T002 | COMPLETE | integration tests PASS | PASS — run 34525190440 | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
 | T003 | COMPLETE | unit tests PASS | PASS — run 34564595328 | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
 | T004 | COMPLETE | unit tests PASS | PASS — run 34564873097 | `9959e70c6dde808efaf096dac75f69f8af0baf69` |
-| T005 | PENDING | — | — | — |
+| T005 | COMPLETE | 12-category legacy spike PASS | PASS — run 34571752300 | `7261629630737d7f20c21036b68b46b03d88aa7d` |
 | T006 | PENDING | — | — | — |
 | T007 | PENDING | — | — | — |
 | T008 | PENDING | — | — | — |
@@ -75,21 +75,33 @@ DEVIATIONS: NONE.
 DECISIONS: only positive integer text with at most 15 digits and exact `yyyy-MM-dd` dates are auto-typed in MVP; ambiguous decimal/date forms and `= + - @` prefixes stay exact text.  
 COMMIT: `9959e70c6dde808efaf096dac75f69f8af0baf69`
 
+### T005
+STATUS: COMPLETE — `LEGACY-DOC-001 = PASS`  
+BASE_BEFORE: `4783c1a9e07e6667e87bbacff4fe43ac675b60c5`  
+FILES_CHANGED: `tests/.../Integration/LegacyDocSpikeTests.cs`, `tests/.../Fixtures/LegacyDoc/README.md`, 12 binary `.doc` corpus fixtures. Temporary one-shot fixture-authoring workflows were created only to overcome the text-only GitHub connector and were removed before final validation.  
+REUSE_DECISION: REUSE `DocSharp.Binary.Doc 0.21.0` exactly as selected by Phase 06; no LibreOffice/Word/native process in the tested conversion path. LibreOffice was used only once to author deterministic binary test fixtures, then removed from the repository/runtime path.  
+VALIDATION: initial RED run `34571100619` failed because fixtures were absent. After corpus materialization, run `34571391910` exercised all 12 categories and exposed one invalid test fixture: its image was an authoring-time `INCLUDEPICTURE` link, not embedded data. That fixture was rejected, not treated as a DocSharp failure. It was replaced with Apache POI `PngPicture.doc` at commit `671a20eb...`; upstream `TestPictures.testPictureDetectionWithPNG` establishes one embedded picture. Final run `34571752300` passed all tests.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34571752300` — PASS, including locked restore/audit/build/test/format/smoke/publish.  
+DEVIATIONS: Task card listed only spike tests/fixtures; due the connected GitHub API being UTF-8 text-only, temporary CI fixture-authoring workflows were necessary to materialize binary `.doc` files. Both one-shot workflows were deleted before PASS. The image fixture provenance is recorded in the corpus README.  
+DECISIONS: the selected DocSharp path is accepted for MVP legacy `.doc` input on the required corpus. Protected documents are detected from the FIB encryption flag before conversion; damaged compound files are rejected. No fallback engine was introduced.  
+COMMIT: `7261629630737d7f20c21036b68b46b03d88aa7d`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
+- T005 used temporary one-shot GitHub Actions workflows solely to author/replace binary test fixtures because the connector cannot write arbitrary binary content. Those workflows were removed before the task PASS; they are not product/runtime dependencies.
 
 ## Upstream Returns
 - NONE
 
 ## Observations For Phase 11
-- NONE yet.
+- T005's locally-authored image candidate was invalid because it was a linked `INCLUDEPICTURE`; the final corpus uses a provenance-backed embedded-image fixture instead.
 
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 8  
-Fast check: PASS through T004 (`34564873097`)  
-Known non-blocking issues: `LEGACY-DOC-001` must PASS before T008.
+Pending tasks: 7  
+Fast check: PASS through T005 (`34571752300`)  
+Known non-blocking issues: NONE from the legacy gate; T006–T012 remain unimplemented.
 
 ## Handoff
 NEXT_PHASE: NONE  
