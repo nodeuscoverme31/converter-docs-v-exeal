@@ -8,6 +8,7 @@
         MinWidth="560"
         MinHeight="470"
         Background="{StaticResource AppBackgroundBrush}"
+        Foreground="{StaticResource AppTextBrush}"
         WindowStartupLocation="CenterScreen">
   <Window.Resources>
     <Style x:Key="CardStyle" TargetType="Border">
