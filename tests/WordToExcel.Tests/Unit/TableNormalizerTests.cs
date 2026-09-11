@@ -100,7 +100,7 @@ public sealed class TableNormalizerTests
     }
 
     private static NormalizedCell At(NormalizedTable table, int row, int column) =>
-        Assert.Single(table.Cells.Where(cell => cell.Row == row && cell.Column == column));
+        Assert.Single(table.Cells, cell => cell.Row == row && cell.Column == column);
 
     private static TableModel Table(params TableRow[] rows) =>
         new(
