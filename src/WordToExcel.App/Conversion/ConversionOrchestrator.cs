@@ -10,6 +10,7 @@ internal sealed class ConversionOrchestrator
 {
     private readonly InputDetector inputDetector;
     private readonly IWordDocumentReader wordReader;
+    private readonly ILegacyDocConverter legacyDocConverter;
     private readonly ITableNormalizer tableNormalizer;
     private readonly ValuePolicy valuePolicy;
     private readonly IExcelWorkbookWriter workbookWriter;
@@ -20,6 +21,7 @@ internal sealed class ConversionOrchestrator
         : this(
             new InputDetector(),
             new DocxDocumentReader(),
+            new LegacyDocConverter(),
             new TableNormalizer(),
             new ValuePolicy(),
             new ExcelWorkbookWriter(),
@@ -36,9 +38,31 @@ internal sealed class ConversionOrchestrator
         IExcelWorkbookWriter workbookWriter,
         IOutputValidator outputValidator,
         OutputPublisher outputPublisher)
+        : this(
+            inputDetector,
+            wordReader,
+            new LegacyDocConverter(),
+            tableNormalizer,
+            valuePolicy,
+            workbookWriter,
+            outputValidator,
+            outputPublisher)
+    {
+    }
+
+    internal ConversionOrchestrator(
+        InputDetector inputDetector,
+        IWordDocumentReader wordReader,
+        ILegacyDocConverter legacyDocConverter,
+        ITableNormalizer tableNormalizer,
+        ValuePolicy valuePolicy,
+        IExcelWorkbookWriter workbookWriter,
+        IOutputValidator outputValidator,
+        OutputPublisher outputPublisher)
     {
         this.inputDetector = inputDetector ?? throw new ArgumentNullException(nameof(inputDetector));
         this.wordReader = wordReader ?? throw new ArgumentNullException(nameof(wordReader));
+        this.legacyDocConverter = legacyDocConverter ?? throw new ArgumentNullException(nameof(legacyDocConverter));
         this.tableNormalizer = tableNormalizer ?? throw new ArgumentNullException(nameof(tableNormalizer));
         this.valuePolicy = valuePolicy ?? throw new ArgumentNullException(nameof(valuePolicy));
         this.workbookWriter = workbookWriter ?? throw new ArgumentNullException(nameof(workbookWriter));
@@ -77,35 +101,10 @@ internal sealed class ConversionOrchestrator
             return Error(ConversionErrorCategory.ReadFailure, "Не удалось прочитать исходный файл.");
         }
 
-        if (inputKind != InputKind.Docx)
+        if (inputKind == InputKind.Unsupported)
         {
-            return Error(
-                ConversionErrorCategory.UnsupportedFormat,
-                inputKind == InputKind.Doc
-                    ? "Поддержка старого формата .doc ещё не подключена к основному конвейеру."
-                    : "Поддерживается файл Word формата .docx.");
+            return Error(ConversionErrorCategory.UnsupportedFormat, "Поддерживаются файлы Word форматов .doc и .docx.");
         }
-
-        DocumentModel document;
-        try
-        {
-            document = wordReader.Read(canonicalSource);
-        }
-        catch (DocumentReadException ex)
-        {
-            return Error(MapReadError(ex.Error), ex.Message);
-        }
-
-        var normalizedTables = document.Tables
-            .Select(tableNormalizer.Normalize)
-            .Select(ApplyValuePlans)
-            .ToArray();
-
-        var warnings = document.Findings
-            .Concat(normalizedTables.SelectMany(table => table.Findings))
-            .Where(finding => finding.Severity == FindingSeverity.Warning)
-            .Distinct()
-            .ToArray();
 
         var tempDirectory = Path.GetFullPath(
             Path.Combine(Path.GetTempPath(), "WordToExcel", Guid.NewGuid().ToString("N")));
@@ -114,6 +113,41 @@ internal sealed class ConversionOrchestrator
         try
         {
             Directory.CreateDirectory(tempDirectory);
+
+            var docxPath = canonicalSource;
+            if (inputKind == InputKind.Doc)
+            {
+                try
+                {
+                    docxPath = legacyDocConverter.ConvertToDocx(canonicalSource, tempDirectory);
+                }
+                catch (LegacyDocConversionException ex)
+                {
+                    return Error(MapLegacyError(ex.Error), ex.Message);
+                }
+            }
+
+            DocumentModel document;
+            try
+            {
+                document = wordReader.Read(docxPath);
+            }
+            catch (DocumentReadException ex)
+            {
+                return Error(MapReadError(ex.Error), ex.Message);
+            }
+
+            var normalizedTables = document.Tables
+                .Select(tableNormalizer.Normalize)
+                .Select(ApplyValuePlans)
+                .ToArray();
+
+            var warnings = document.Findings
+                .Concat(normalizedTables.SelectMany(table => table.Findings))
+                .Where(finding => finding.Severity == FindingSeverity.Warning)
+                .Distinct()
+                .ToArray();
+
             workbookWriter.Write(document, normalizedTables, tempXlsx);
 
             var validation = outputValidator.Validate(tempXlsx, document, normalizedTables);
@@ -158,6 +192,13 @@ internal sealed class ConversionOrchestrator
         DocumentReadError.ProtectedDocument => ConversionErrorCategory.ProtectedDocument,
         DocumentReadError.UnsupportedStructure => ConversionErrorCategory.UnsupportedFormat,
         _ => ConversionErrorCategory.ReadFailure,
+    };
+
+    private static ConversionErrorCategory MapLegacyError(LegacyDocError error) => error switch
+    {
+        LegacyDocError.ProtectedDocument => ConversionErrorCategory.ProtectedDocument,
+        LegacyDocError.UnsupportedLegacyDoc => ConversionErrorCategory.UnsupportedFormat,
+        _ => ConversionErrorCategory.LegacyConversion,
     };
 
     private static ConversionResult Error(ConversionErrorCategory category, string message) =>
