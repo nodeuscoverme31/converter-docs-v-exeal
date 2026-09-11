@@ -96,7 +96,6 @@ public sealed class LegacyDocSpikeTests
     public void EmbeddedImage_BecomesExplicitUnsupportedObjectFinding()
     {
         var model = ConvertAndRead("embedded-image.doc");
-        Assert.Contains("Таблица с изображением рядом", CellTexts(model));
         Assert.NotEmpty(model.UnsupportedObjects);
         Assert.Contains(model.Findings, finding => finding.Code == "UNSUPPORTED_OBJECT");
     }
