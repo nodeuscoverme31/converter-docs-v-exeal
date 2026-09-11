@@ -46,22 +46,26 @@ jobs:
         shell: pwsh
         run: dotnet run --project src/WordToExcel.App/WordToExcel.App.csproj -c Release --no-build -- --bootstrap-smoke
 
-      - name: Publish portable folder
+      - name: Publish single-file Windows build
         shell: pwsh
-        run: dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false
+        run: dotnet publish src/WordToExcel.App/WordToExcel.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -p:IncludeNativeLibrariesForSelfExtract=true
 
-      - name: Verify publish output
+      - name: Stage single EXE
         shell: pwsh
         run: |
-          $exe = Get-ChildItem src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/WordToExcel.App.exe -ErrorAction Stop
-          if (-not $exe) { throw "Published executable not found" }
-          Write-Host "Published executable: $($exe.FullName)"
+          $source = 'src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/WordToExcel.App.exe'
+          if (-not (Test-Path $source)) { throw "Published executable not found: $source" }
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          Copy-Item $source 'artifacts/WordToExcel.exe'
+          $exe = Get-Item 'artifacts/WordToExcel.exe'
+          if ($exe.Length -le 0) { throw "Staged executable is empty" }
+          Write-Host "Single-file executable: $($exe.FullName) ($($exe.Length) bytes)"
 
-      - name: Upload portable Windows build
+      - name: Upload single Windows EXE
         uses: actions/upload-artifact@v4
         with:
-          name: WordToExcel-win-x64-portable
-          path: src/WordToExcel.App/bin/Release/net10.0-windows/win-x64/publish/
+          name: WordToExcel-win-x64-single-exe
+          path: artifacts/WordToExcel.exe
           if-no-files-found: error
           retention-days: 7
 
