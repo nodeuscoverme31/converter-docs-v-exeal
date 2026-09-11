@@ -55,7 +55,7 @@ public sealed class WorkbookUsabilityTests
 
             var sheetView = worksheetPart.Worksheet.SheetViews!.Elements<SheetView>().Single();
             Assert.NotNull(sheetView.Pane);
-            Assert.Equal(PaneStateValues.Frozen, sheetView.Pane!.State?.Value);
+            Assert.Equal("frozen", sheetView.Pane!.State?.InnerText);
             Assert.Equal(1D, sheetView.Pane.VerticalSplit?.Value);
             Assert.Equal("A2", sheetView.Pane.TopLeftCell?.Value);
 
