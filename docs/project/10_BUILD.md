@@ -1,7 +1,7 @@
 # 10 — Build
 
 PHASE: 10_BUILD  
-STATUS: READY_FOR_INTERACTIVE_SMOKE
+STATUS: ACCEPTED_READY_FOR_MERGE
 
 ## Baseline
 Repository: `nodeuscoverme31/converter-docs-v-exeal`  
@@ -55,9 +55,9 @@ COMMIT: `95467b68c771b840dc7381fd3f3ab3cb99b60e77`
 
 ### T004 — Lossless Excel value policy
 STATUS: COMPLETE  
-RESULT: leading-zero IDs, >15-digit identifiers and formula-like text remain text; only intentionally safe integer/ISO-date cases are typed.  
+RESULT: leading-zero IDs, >15-digit identifiers and formula-like text remain text; intentionally safe integers, ISO dates and strict dot-decimals are typed.  
 VALIDATION: `ValuePolicyTests` PASS.  
-FAST_CHECK: `34564873097` — PASS.  
+FAST_CHECK: `34564873097` — PASS for original task; post-smoke decimal regression covered by later full runs.  
 COMMIT: `9959e70c6dde808efaf096dac75f69f8af0baf69`
 
 ### T005 — Legacy `.doc` fidelity spike
@@ -133,22 +133,17 @@ After T012, two WPF foreground fixes were applied so light application surfaces 
 - `e13c6060d241781cdcdc530d3529383d2d4aab59` — keep light-surface text readable in dark Windows theme.
 - `53f1c9a3e48bb615e2ca2c8c2f9bd86131e01c0b` — pin readable foreground for the light application theme.
 
-CI packaging was then changed from a self-contained folder artifact to a single-file Windows executable:
-- PRODUCT_HEAD_BEFORE_DOC_CLOSEOUT: `dc406eb5d64f57f2d4e037ab0aeb2fbf8a7c4055`
+CI packaging was changed from a self-contained folder artifact to a single-file Windows executable:
 - change: `dotnet publish ... -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -p:IncludeNativeLibrariesForSelfExtract=true`
 - staged artifact: `WordToExcel-win-x64-single-exe` containing `WordToExcel.exe`
-- GitHub Actions `bootstrap-check` run `34582652988` — PASS on `dc406eb5d64f57f2d4e037ab0aeb2fbf8a7c4055`.
-
-A rolling prerelease channel was also added for interactive testing:
-- tag/release: `test-latest`
-- asset: `WordToExcel.exe`
-- permanent download path: `releases/download/test-latest/WordToExcel.exe`
-- successful branch CI replaces the EXE in this prerelease after all checks pass.
+- rolling prerelease: `test-latest`
+- permanent test asset: `WordToExcel.exe`
+- successful branch CI replaces the EXE after all checks pass.
 
 ## Interactive Smoke Remediation
-The first real stress-DOCX acceptance pass preserved all seven table sheets, all 29 context blocks, leading-zero identifiers, long IDs, formula-like text, line breaks, Unicode, empty cells, merge normalization and the expected unsupported-image warning. No data-loss defect was found. The pass did expose two usability gaps: strict dot-decimal values such as `799.90` were kept as text, and generated sheets required manual formatting for comfortable Excel use.
+The first stress-DOCX acceptance pass preserved all seven table sheets, all 29 context blocks, leading-zero identifiers, long IDs, formula-like text, line breaks, Unicode, empty cells, merge normalization and the expected unsupported-image warning. No data-loss defect was found. It exposed two usability gaps: strict dot-decimal values such as `799.90` were kept as text, and generated sheets required manual formatting.
 
-The approved remediation keeps the existing architecture and adds only Excel-output usability behavior:
+Remediation added:
 - safe dot-decimals with one `.` and no more than 15 significant digits become numeric Excel values;
 - source decimal precision is retained through number formats such as `0.00`;
 - ambiguous comma decimals, leading-zero decimals, over-15-digit numbers and formula-like prefixes remain exact text;
@@ -157,44 +152,72 @@ The approved remediation keeps the existing architecture and adds only Excel-out
 
 TDD evidence:
 - RED run `34591967944`: 60 tests total, 6 expected failures for the missing decimal/formatting behavior;
-- subsequent investigation confirmed ClosedXML serializes a requested width of 45 as `45.710625` and `FreezeRows(1)` as OpenXML `state="frozenSplit"`; tests were aligned to the actual serialized format without weakening the production clamp or freeze behavior;
-- GREEN product run `34592875962`: restore/audit, build, all 60 tests, format check, bootstrap smoke, single-file Windows publish, canonical-doc check and rolling `test-latest` publication PASS;
-- final documentation-closeout run `34593197788`: the same full workflow PASS on the final recorded branch state and refreshed `test-latest`.
+- investigation confirmed ClosedXML serializes a requested width of 45 as `45.710625` and `FreezeRows(1)` as OpenXML `state="frozenSplit"`;
+- GREEN product run `34592875962`: full workflow PASS;
+- documentation-closeout run `34593197788`: full workflow PASS.
+
+## Interactive UI Remediation
+Interactive Windows testing then found two UI issues that automated conversion tests did not expose:
+- file drag-and-drop was too narrowly bound to the inner drop zone;
+- the selected-file clear control was not reliably visible when injected at runtime.
+
+Remediation:
+- drag/drop handling is available at window level while conversion is idle;
+- supported drop policy is covered by unit tests;
+- a small selected-file `×` control is declared directly in `MainWindow.xaml` and resets the current selection without deleting the source document;
+- a markup regression test requires `ClearSelectedFileButton` to exist in XAML.
+
+Verification:
+- RED run `34601998139`: 67 PASS / 1 expected failure because the clear button was absent from XAML;
+- GREEN run `34602198927`: complete `bootstrap-check` workflow PASS on commit `97d760c8a23d68a0fff559b7a1640e612bc19281`, including build, tests, format, bootstrap smoke, single-file publish, canonical-doc check and `test-latest` publication.
+
+## Interactive Windows Acceptance
+STATUS: PASS  
+DATE: 2026-09-11  
+TEST BUILD: `test-latest` from product commit `97d760c8a23d68a0fff559b7a1640e612bc19281`.
+
+Confirmed interactively on Windows:
+- portable `WordToExcel.exe` launches outside the repository checkout;
+- stress `.docx` converts successfully;
+- expected unsupported-image warning is shown rather than hidden;
+- generated workbook contains all seven table sheets plus `Контекст`;
+- strict dot-decimals are usable Excel numbers while protected identifiers/formula-like strings remain text;
+- wrap, bold headers, bounded widths and frozen first rows are present;
+- drag-and-drop selection works;
+- selected-file `×` is visible and works;
+- legacy `.doc` path remains covered by the accepted legacy corpus/E2E suite.
+
+Acceptance gate result: `PASS`.
 
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API was introduced.
 - T005 used temporary one-shot GitHub Actions workflows solely to materialize/replace binary legacy fixtures because the connected text API could not author those binaries directly. The workflows were removed before PASS and are not runtime dependencies.
 - T011 used the same temporary-fixture pattern for one encrypted DOCX corpus item; provenance is recorded with the fixture and the workflow was removed before PASS.
-- Post-T012 interactive smoke added narrowly scoped Excel usability remediation without changing the accepted Word→model→normalize→validate→publish architecture.
+- Post-T012 interactive smoke added narrowly scoped Excel usability/UI remediation without changing the accepted Word→model→normalize→validate→publish architecture.
 - No Office process, LibreOffice runtime fallback, network service, database or background service was added to the product path.
 
 ## Upstream Returns
 - NONE
 
 ## Acceptance Gate
-Automated implementation is complete. Phase 10 remains intentionally unmerged until an interactive Windows smoke is completed against the refreshed single-file executable.
+Automated implementation and interactive Windows acceptance are complete.
 
-Required manual smoke before merge:
-1. Launch the current `test-latest` `WordToExcel.exe` on Windows without relying on the repository checkout.
-2. Convert the same stress `.docx` used for the first acceptance pass.
-3. Open the generated `.xlsx` and confirm the table/context sheets remain readable and values such as `799.90` behave as numbers.
-4. Convert one real or corpus-approved `.doc`.
-5. Exercise at least one warning/error path if convenient.
-
-Acceptance result must be recorded before the PR is merged.
+Merge prerequisites:
+1. latest branch CI PASS;
+2. PR #1 marked Ready for Review;
+3. explicit merge decision.
 
 ## Final Build State
 Branch: `build/phase-10`  
 PR: `#1 Phase 10 — Build`  
 Pending implementation tasks: 0  
-Pending acceptance: refreshed interactive Windows smoke  
-Latest full branch verification: PASS — run `34593197788`  
-Tests in verified product run: 60/60 PASS  
+Pending interactive acceptance: 0  
+Latest accepted product verification: PASS — run `34602198927`  
 Rolling test release: `test-latest` with single `WordToExcel.exe`  
-Known blocking implementation issues: NONE from automated verification  
+Known blocking implementation issues: NONE  
 Known non-blocking issues: existing nullable-analysis warnings remain outside this remediation scope  
-Merge gate: INTERACTIVE_SMOKE_REQUIRED
+Merge gate: READY_FOR_REVIEW
 
 ## Handoff
-NEXT_PHASE: INTERACTIVE_ACCEPTANCE  
+NEXT_PHASE: PR_READY_AND_MERGE_DECISION  
 RETURN_TO_PHASE: NONE
