@@ -19,7 +19,7 @@ Workers: one implementation executor; no separate coding subagent/worktree runti
 |---|---|---|---|---|
 | T001 | COMPLETE | build PASS | PASS — run 34523442594 | `175e5b04cb3d9c91a64905ad3e98e335cffa8a49` |
 | T002 | COMPLETE | integration tests PASS | PASS — run 34525190440 | `a4061c00decdf45f544f0cba0fe32114c46c3d52` |
-| T003 | PENDING | — | — | — |
+| T003 | COMPLETE | unit tests PASS | PASS — run 34564595328 | `95467b68c771b840dc7381fd3f3ab3cb99b60e77` |
 | T004 | PENDING | — | — | — |
 | T005 | PENDING | — | — | — |
 | T006 | PENDING | — | — | — |
@@ -53,6 +53,17 @@ DEVIATIONS: `Properties/AssemblyInfo.cs` was an unplanned but local testability 
 DECISIONS: nested table text is not duplicated into parent cell text; vertical-merge state is read from the Open XML enum value; empty technical paragraphs do not create spurious line breaks.  
 COMMIT: `a4061c00decdf45f544f0cba0fe32114c46c3d52`
 
+### T003
+STATUS: COMPLETE  
+BASE_BEFORE: `5c16347077c8553f73b53071ab5d6dd8a2293d64`  
+FILES_CHANGED: `Conversion/TableNormalizer.cs`, `tests/.../Unit/TableNormalizerTests.cs`.  
+REUSE_DECISION: EXTEND the accepted T001 `TableModel`/`NormalizedTable` contract; no extra grid library or alternate table model.  
+VALIDATION: TDD RED was observed in run `34564354460` because `TableNormalizer` did not yet exist; final tests cover regular grids, horizontal spans, vertical merge continuation, irregular rows, real empty source cells and orphan continuation ambiguity.  
+FAST_CHECK: GitHub Actions `bootstrap-check` run `34564595328` — PASS, including build/test/format/smoke/publish.  
+DEVIATIONS: NONE.  
+DECISIONS: covered merge coordinates carry empty generated cells with no `SourceCellId`; unmatched vertical continuation is preserved as an anchor plus `TABLE_VERTICAL_MERGE_AMBIGUOUS` warning rather than guessed/dropped.  
+COMMIT: `95467b68c771b840dc7381fd3f3ab3cb99b60e77`
+
 ## Build Deviations
 - T002 added `Properties/AssemblyInfo.cs` solely for test access to internal accepted contracts; no public API introduced.
 
@@ -65,8 +76,8 @@ COMMIT: `a4061c00decdf45f544f0cba0fe32114c46c3d52`
 ## Final Build State
 HEAD: current `build/phase-10` head  
 Worktree: isolated remote branch  
-Pending tasks: 10  
-Fast check: PASS through T002 (`34525190440`)  
+Pending tasks: 9  
+Fast check: PASS through T003 (`34564595328`)  
 Known non-blocking issues: `LEGACY-DOC-001` must PASS before T008.
 
 ## Handoff
